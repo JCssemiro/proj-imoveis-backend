@@ -43,14 +43,6 @@ export async function createApp(): Promise<NestFastifyApplication> {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Na Vercel (serverless) os assets do Swagger não vêm no bundle; redirect para CDN.
-  const swaggerUiCdn = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
-  const fastify = app.getHttpAdapter().getInstance();
-  const docPath = '/api/v1/docs';
-  fastify.get(`${docPath}/swagger-ui.css`, (_, reply) => reply.redirect(302, `${swaggerUiCdn}/swagger-ui.css`));
-  fastify.get(`${docPath}/swagger-ui-bundle.js`, (_, reply) => reply.redirect(302, `${swaggerUiCdn}/swagger-ui-bundle.js`));
-  fastify.get(`${docPath}/swagger-ui-standalone-preset.js`, (_, reply) => reply.redirect(302, `${swaggerUiCdn}/swagger-ui-standalone-preset.js`));
-
   const swaggerConfig = new DocumentBuilder()
     .setTitle('ImobiConnect API')
     .setDescription('API do projeto ImobiConnect - gestão de imóveis, leads e conversas.')

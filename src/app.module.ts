@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
+import { SwaggerAssetsController } from './swagger-assets.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -14,7 +15,7 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { BrokersModule } from './brokers/brokers.module';
 
 @Module({
-  controllers: [AppController],
+  controllers: [AppController, SwaggerAssetsController],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
