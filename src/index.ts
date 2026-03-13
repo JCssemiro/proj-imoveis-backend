@@ -8,6 +8,8 @@ import { resolve } from 'path';
 config({ path: resolve(process.cwd(), '.env') });
 
 import type { IncomingMessage, ServerResponse } from 'http';
+// Import explícito para o detector da Vercel reconhecer este entrypoint como app NestJS
+import '@nestjs/core';
 import { createApp } from './app.factory';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
