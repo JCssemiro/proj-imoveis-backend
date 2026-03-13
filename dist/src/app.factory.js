@@ -11,13 +11,11 @@ const http_exception_filter_1 = require("./common/filters/http-exception.filter"
 function validateProductionEnv() {
     if (process.env.NODE_ENV === 'production') {
         if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
-            console.error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente.');
-            process.exit(1);
+            throw new Error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente na Vercel.');
         }
         const unsafe = ['change-me', 'secret', 'jwt_secret'];
         if (unsafe.some((s) => process.env.JWT_SECRET?.toLowerCase().includes(s))) {
-            console.error('Use um JWT_SECRET forte e único em produção.');
-            process.exit(1);
+            throw new Error('Use um JWT_SECRET forte e único em produção.');
         }
     }
 }
@@ -35,8 +33,8 @@ async function createApp() {
     }));
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     const swaggerConfig = new swagger_1.DocumentBuilder()
-        .setTitle('API')
-        .setDescription('API do projeto - gestão de imóveis, leads e conversas.')
+        .setTitle('ImobiConnect API')
+        .setDescription('API do projeto ImobiConnect - gestão de imóveis, leads e conversas.')
         .setVersion('1.0')
         .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
         .build();

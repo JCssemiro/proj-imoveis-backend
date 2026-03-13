@@ -26,6 +26,22 @@ let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
         ]);
         if (isPublic)
             return true;
+        const request = context.switchToHttp().getRequest();
+        const rawPath = request.url ??
+            request.raw?.url ??
+            request.routerPath ??
+            request.path ??
+            request.pathname ??
+            '';
+        const path = rawPath.toString().split('?')[0].toLowerCase();
+        const isHealth = path === '/api/v1/health' ||
+            path.endsWith('/health') ||
+            path.includes('health');
+        const isDocs = path.startsWith('/api/v1/docs') ||
+            path.includes('/docs') ||
+            path.includes('docs');
+        if (isHealth || isDocs)
+            return true;
         return super.canActivate(context);
     }
     handleRequest(err, user) {

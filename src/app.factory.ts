@@ -5,16 +5,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
-export function validateProductionEnv() {
+export function validateProductionEnv(): void {
   if (process.env.NODE_ENV === 'production') {
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
-      console.error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente.');
-      process.exit(1);
+      throw new Error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente na Vercel.');
     }
     const unsafe = ['change-me', 'secret', 'jwt_secret'];
     if (unsafe.some((s) => process.env.JWT_SECRET?.toLowerCase().includes(s))) {
-      console.error('Use um JWT_SECRET forte e único em produção.');
-      process.exit(1);
+      throw new Error('Use um JWT_SECRET forte e único em produção.');
     }
   }
 }
