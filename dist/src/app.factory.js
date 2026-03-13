@@ -35,8 +35,8 @@ async function createApp() {
     }));
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     const swaggerConfig = new swagger_1.DocumentBuilder()
-        .setTitle('ImobiConnect API')
-        .setDescription('API do projeto ImobiConnect - gestão de imóveis, leads e conversas.')
+        .setTitle('API')
+        .setDescription('API do projeto - gestão de imóveis, leads e conversas.')
         .setVersion('1.0')
         .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
         .build();
