@@ -1,0 +1,7 @@
+node_modules
+.env
+BD.md
+RELATORIO-TESTES.md
+RELATORIO-TESTES-USABILIDADE.md
+RELATORIO-TESTES-API.md
+test-api-usability.js

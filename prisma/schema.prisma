@@ -1,0 +1,228 @@
+// ImobiConnect - PostgreSQL + Prisma
+// API-ARQ.md / API-BACKEND-SPEC.md
+// Schema otimizado: parametrização, tipos corretos, índices e integridade
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  client
+  broker
+}
+
+enum LeadStatus {
+  new
+  contacted
+  in_progress
+  closed
+}
+
+enum SenderType {
+  client
+  broker
+}
+
+// =============================================================================
+// Tabelas de parâmetros (parametrização: novos valores sem alterar schema)
+// =============================================================================
+
+model Finalidade {
+  id        String   @id @default(uuid())
+  codigo    String   @unique
+  label     String
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  interesses PropertyInterest[]
+
+  @@index([ativo, ordem])
+  @@map("Finalidade")
+}
+
+model TipoImovel {
+  id        String   @id @default(uuid())
+  codigo    String   @unique
+  label     String
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  interesses PropertyInterest[]
+
+  @@index([ativo, ordem])
+  @@map("TipoImovel")
+}
+
+model TipoCasa {
+  id        String   @id @default(uuid())
+  codigo    String   @unique
+  label     String
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  interesses PropertyInterest[]
+
+  @@index([ativo, ordem])
+  @@map("TipoCasa")
+}
+
+model CompraOuAluguel {
+  id        String   @id @default(uuid())
+  codigo    String   @unique
+  label     String
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  interesses PropertyInterest[]
+
+  @@index([ativo, ordem])
+  @@map("CompraOuAluguel")
+}
+
+model Mobilia {
+  id        String   @id @default(uuid())
+  codigo    String   @unique
+  label     String
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  interesses PropertyInterest[]
+
+  @@index([ativo, ordem])
+  @@map("Mobilia")
+}
+
+// =============================================================================
+// Usuario
+// =============================================================================
+
+model User {
+  id                    String    @id @default(uuid())
+  name                  String
+  email                 String    @unique
+  phone                 String
+  passwordHash          String
+  type                  UserType
+  cpf                   String?
+  creci                 String?
+  subscriptionActive    Boolean?
+  avatar                String?
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  interestsAsClient     PropertyInterest[]
+  leadsAsBroker         Lead[]
+  conversationsAsClient Conversation[]  @relation("ClientConversations")
+  conversationsAsBroker Conversation[]  @relation("BrokerConversations")
+  messagesSent          Message[]
+
+  @@index([type])
+  @@map("Usuario")
+}
+
+// =============================================================================
+// InteresseImovel (FKs para parâmetros, tipos numéricos para filtros/performance)
+// =============================================================================
+
+model PropertyInterest {
+  id                  String   @id @default(uuid())
+  clientId            String
+  client              User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  locations           String[]
+  compraOuAluguelId   String
+  compraOuAluguel     CompraOuAluguel @relation(fields: [compraOuAluguelId], references: [id], onDelete: Restrict)
+  finalidadeId        String
+  finalidade          Finalidade     @relation(fields: [finalidadeId], references: [id], onDelete: Restrict)
+  tipoImovelId        String
+  tipoImovel          TipoImovel     @relation(fields: [tipoImovelId], references: [id], onDelete: Restrict)
+  tipoCasaId          String
+  tipoCasa            TipoCasa       @relation(fields: [tipoCasaId], references: [id], onDelete: Restrict)
+  mobiliaId           String
+  mobilia             Mobilia        @relation(fields: [mobiliaId], references: [id], onDelete: Restrict)
+  quartos             Int?           // NULL = indiferente
+  suites              Int?
+  metragemTerreno     Int?           // m²
+  areaConstruida      Int?           // m²
+  minPrice            Int            @default(0)
+  maxPrice            Int            @default(0)
+  features            String[]
+  notes               String         @default("")
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+
+  lead                Lead?
+
+  @@index([clientId])
+  @@index([createdAt])
+  @@index([isActive])
+  @@index([clientId, isActive])
+  @@index([finalidadeId, tipoImovelId])
+  @@index([minPrice, maxPrice])
+  @@map("InteresseImovel")
+}
+
+model Lead {
+  id         String     @id @default(uuid())
+  interestId String     @unique
+  interest   PropertyInterest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  brokerId   String?
+  broker     User?      @relation(fields: [brokerId], references: [id], onDelete: SetNull)
+  status     LeadStatus @default(new)
+  createdAt  DateTime   @default(now())
+
+  conversation Conversation?
+
+  @@index([brokerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([brokerId, status])
+  @@map("Prospecto")
+}
+
+model Conversation {
+  id                      String    @id @default(uuid())
+  clientId                String
+  client                  User      @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
+  brokerId                String
+  broker                  User      @relation("BrokerConversations", fields: [brokerId], references: [id], onDelete: Cascade)
+  leadId                  String    @unique
+  lead                    Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  propertyInterestSummary String
+  updatedAt               DateTime  @updatedAt
+
+  messages Message[]
+
+  @@index([clientId])
+  @@index([brokerId])
+  @@index([updatedAt])
+  @@map("Conversa")
+}
+
+model Message {
+  id             String     @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderType     SenderType
+  content        String
+  imageUrl       String?
+  createdAt      DateTime   @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@index([conversationId, createdAt])
+  @@map("Mensagem")
+}

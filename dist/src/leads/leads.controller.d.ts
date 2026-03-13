@@ -1,0 +1,93 @@
+import { LeadsService } from './leads.service';
+import { UpdateLeadDto } from './dto/update-lead.dto';
+export declare class LeadsController {
+    private leads;
+    constructor(leads: LeadsService);
+    findAll(_brokerId: string, status?: string, tipoImovel?: string, regiao?: string, maxPrice?: string): Promise<{
+        id: string;
+        interest: {
+            id: string;
+            clientId: string;
+            clientName: string;
+            clientPhone: string;
+            clientEmail: string;
+            locations: string[];
+            compraOuAluguel: string;
+            finalidade: string;
+            tipoImovel: string;
+            tipoCasa: string;
+            quartos: string;
+            suites: string;
+            metragemTerreno: string;
+            areaConstruida: string;
+            mobilia: string;
+            minPrice: number;
+            maxPrice: number;
+            features: string[];
+            notes: string;
+            createdAt: string;
+            isActive: boolean;
+        };
+        brokerId: string | null;
+        status: import(".prisma/client").$Enums.LeadStatus;
+        createdAt: string;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        interest: {
+            id: string;
+            clientId: string;
+            clientName: string;
+            clientPhone: string;
+            clientEmail: string;
+            locations: string[];
+            compraOuAluguel: string;
+            finalidade: string;
+            tipoImovel: string;
+            tipoCasa: string;
+            quartos: string;
+            suites: string;
+            metragemTerreno: string;
+            areaConstruida: string;
+            mobilia: string;
+            minPrice: number;
+            maxPrice: number;
+            features: string[];
+            notes: string;
+            createdAt: string;
+            isActive: boolean;
+        };
+        brokerId: string | null;
+        status: import(".prisma/client").$Enums.LeadStatus;
+        createdAt: string;
+    }>;
+    update(id: string, dto: UpdateLeadDto, brokerId: string): Promise<{
+        id: string;
+        interest: {
+            id: string;
+            clientId: string;
+            clientName: string;
+            clientPhone: string;
+            clientEmail: string;
+            locations: string[];
+            compraOuAluguel: string;
+            finalidade: string;
+            tipoImovel: string;
+            tipoCasa: string;
+            quartos: string;
+            suites: string;
+            metragemTerreno: string;
+            areaConstruida: string;
+            mobilia: string;
+            minPrice: number;
+            maxPrice: number;
+            features: string[];
+            notes: string;
+            createdAt: string;
+            isActive: boolean;
+        };
+        brokerId: string | null;
+        status: import(".prisma/client").$Enums.LeadStatus;
+        createdAt: string;
+    }>;
+}
