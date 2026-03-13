@@ -9,6 +9,8 @@ import { resolve } from 'path';
 config({ path: resolve(process.cwd(), '.env') });
 
 import type { IncomingMessage, ServerResponse } from 'http';
+// Import explícito para a Vercel detectar este arquivo como entrypoint NestJS
+import '@nestjs/core';
 import { createApp } from './app.factory';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
