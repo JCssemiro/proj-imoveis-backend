@@ -43,6 +43,31 @@ export async function createApp(): Promise<NestFastifyApplication> {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  // Servir assets do Swagger via proxy do CDN *antes* do SwaggerModule.setup(), para ter prioridade sobre useStaticAssets.
+  const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
+  const docsPrefix = '/api/v1/docs';
+  const fastify = app.getHttpAdapter().getInstance();
+
+  async function proxySwaggerAsset(
+    reply: { type: (t: string) => { send: (b: string) => unknown } },
+    cdnPath: string,
+    contentType: string,
+  ): Promise<unknown> {
+    const res = await fetch(`${SWAGGER_UI_CDN}/${cdnPath}`);
+    const body = await res.text();
+    return reply.type(contentType).send(body);
+  }
+
+  fastify.get(`${docsPrefix}/swagger-ui.css`, (_, reply) =>
+    proxySwaggerAsset(reply, 'swagger-ui.css', 'text/css'),
+  );
+  fastify.get(`${docsPrefix}/swagger-ui-bundle.js`, (_, reply) =>
+    proxySwaggerAsset(reply, 'swagger-ui-bundle.js', 'application/javascript'),
+  );
+  fastify.get(`${docsPrefix}/swagger-ui-standalone-preset.js`, (_, reply) =>
+    proxySwaggerAsset(reply, 'swagger-ui-standalone-preset.js', 'application/javascript'),
+  );
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('ImobiConnect API')
     .setDescription('API do projeto ImobiConnect - gestão de imóveis, leads e conversas.')
