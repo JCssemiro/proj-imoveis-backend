@@ -12,16 +12,16 @@ const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
 export class SwaggerAssetsController {
   @Get('swagger-ui.css')
   redirectCss(@Res() res: FastifyReply) {
-    return res.redirect(302, `${SWAGGER_UI_CDN}/swagger-ui.css`);
+    return res.redirect(`${SWAGGER_UI_CDN}/swagger-ui.css`, 302);
   }
 
   @Get('swagger-ui-bundle.js')
   redirectBundle(@Res() res: FastifyReply) {
-    return res.redirect(302, `${SWAGGER_UI_CDN}/swagger-ui-bundle.js`);
+    return res.redirect(`${SWAGGER_UI_CDN}/swagger-ui-bundle.js`, 302);
   }
 
   @Get('swagger-ui-standalone-preset.js')
   redirectStandalonePreset(@Res() res: FastifyReply) {
-    return res.redirect(302, `${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js`);
+    return res.redirect(`${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js`, 302);
   }
 }
