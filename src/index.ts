@@ -40,16 +40,21 @@ export default async function handler(
   res: ServerResponse,
 ): Promise<void> {
   try {
-    // Na Vercel, com rewrite "/(.*)" -> "/api?__path=$1", req.url vem como "/api?__path=..."; restaurar path original.
+    // Vercel com rewrite para /api: restaurar path original (__path no query ou header x-url).
     const rawUrl = req.url || '/';
-    try {
-      const pathParam = rawUrl.includes('__path=') ? new URL(rawUrl, 'http://x').searchParams.get('__path') : null;
-      if (pathParam != null) {
-        (req as IncomingMessage & { url: string }).url = '/' + pathParam;
-      }
-    } catch {
-      // ignorar falha ao parsear URL
+    let pathToUse: string | null = null;
+    if (rawUrl.includes('__path=')) {
+      try {
+        pathToUse = new URL(rawUrl, 'http://x').searchParams.get('__path');
+        if (pathToUse != null) pathToUse = '/' + pathToUse;
+      } catch { /* ignore */ }
     }
+    if (pathToUse == null) {
+      const h = req.headers['x-url'] ?? req.headers['x-original-url'];
+      const hv = typeof h === 'string' ? h : Array.isArray(h) ? h[0] : null;
+      if (hv) pathToUse = hv.startsWith('http') ? new URL(hv).pathname : hv;
+    }
+    if (pathToUse != null) (req as IncomingMessage & { url: string }).url = pathToUse;
     const app = await getApp();
     const fastify = app.getHttpAdapter().getInstance();
     await fastify.ready();
