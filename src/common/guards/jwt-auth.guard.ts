@@ -15,6 +15,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
     if (isPublic) return true;
+    // Rotas de documentação e health não passam por controller (Swagger), liberar por path
+    const request = context.switchToHttp().getRequest();
+    const path = request.url?.split('?')[0] ?? '';
+    if (path === '/api/v1/health' || path.startsWith('/api/v1/docs')) return true;
     return super.canActivate(context);
   }
 
