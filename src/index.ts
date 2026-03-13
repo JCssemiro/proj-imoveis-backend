@@ -40,6 +40,16 @@ export default async function handler(
   res: ServerResponse,
 ): Promise<void> {
   try {
+    // Na Vercel, com rewrite "/(.*)" -> "/api?__path=$1", req.url vem como "/api?__path=..."; restaurar path original.
+    const rawUrl = req.url || '/';
+    try {
+      const pathParam = rawUrl.includes('__path=') ? new URL(rawUrl, 'http://x').searchParams.get('__path') : null;
+      if (pathParam != null) {
+        (req as IncomingMessage & { url: string }).url = '/' + pathParam;
+      }
+    } catch {
+      // ignorar falha ao parsear URL
+    }
     const app = await getApp();
     const fastify = app.getHttpAdapter().getInstance();
     await fastify.ready();
