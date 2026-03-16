@@ -43,7 +43,7 @@ model Finalidade {
   interesses PropertyInterest[]
 
   @@index([ativo, ordem])
-  @@map("Finalidade")
+  @@map("finalidade")
 }
 
 model TipoImovel {
@@ -57,7 +57,7 @@ model TipoImovel {
   interesses PropertyInterest[]
 
   @@index([ativo, ordem])
-  @@map("TipoImovel")
+  @@map("tipoimovel")
 }
 
 model TipoCasa {
@@ -71,7 +71,7 @@ model TipoCasa {
   interesses PropertyInterest[]
 
   @@index([ativo, ordem])
-  @@map("TipoCasa")
+  @@map("tipocasa")
 }
 
 model CompraOuAluguel {
@@ -85,7 +85,7 @@ model CompraOuAluguel {
   interesses PropertyInterest[]
 
   @@index([ativo, ordem])
-  @@map("CompraOuAluguel")
+  @@map("compraoualuguel")
 }
 
 model Mobilia {
@@ -99,7 +99,7 @@ model Mobilia {
   interesses PropertyInterest[]
 
   @@index([ativo, ordem])
-  @@map("Mobilia")
+  @@map("mobilia")
 }
 
 // =============================================================================
@@ -129,7 +129,7 @@ model User {
   messagesSent          Message[]
 
   @@index([type])
-  @@map("Usuario")
+  @@map("usuario")
 }
 
 // =============================================================================
@@ -170,7 +170,7 @@ model PropertyInterest {
   @@index([clientId, isActive])
   @@index([finalidadeId, tipoImovelId])
   @@index([minPrice, maxPrice])
-  @@map("InteresseImovel")
+  @@map("interesseimovel")
 }
 
 model Lead {
@@ -188,7 +188,7 @@ model Lead {
   @@index([status])
   @@index([createdAt])
   @@index([brokerId, status])
-  @@map("Prospecto")
+  @@map("prospecto")
 }
 
 model Conversation {
@@ -207,7 +207,7 @@ model Conversation {
   @@index([clientId])
   @@index([brokerId])
   @@index([updatedAt])
-  @@map("Conversa")
+  @@map("conversa")
 }
 
 model Message {
@@ -224,5 +224,5 @@ model Message {
   @@index([conversationId])
   @@index([createdAt])
   @@index([conversationId, createdAt])
-  @@map("Mensagem")
+  @@map("mensagem")
 }
