@@ -52,7 +52,7 @@ let LeadsService = class LeadsService {
         };
     }
     async findAll(brokerId, filters) {
-        const leads = await this.prisma.lead.findMany({
+        const leads = await this.prisma.prospecto.findMany({
             where: {
                 ...(filters.status && { status: filters.status }),
                 interest: {
@@ -78,7 +78,7 @@ let LeadsService = class LeadsService {
         }));
     }
     async findOne(id) {
-        const lead = await this.prisma.lead.findUnique({
+        const lead = await this.prisma.prospecto.findUnique({
             where: { id },
             include: {
                 interest: { include: interestInclude },
@@ -96,7 +96,7 @@ let LeadsService = class LeadsService {
         };
     }
     async update(id, dto, currentBrokerId) {
-        const lead = await this.prisma.lead.findUnique({
+        const lead = await this.prisma.prospecto.findUnique({
             where: { id },
             include: {
                 interest: { include: interestInclude },
@@ -108,7 +108,7 @@ let LeadsService = class LeadsService {
         if (dto.brokerId !== undefined && dto.brokerId !== null && dto.brokerId !== currentBrokerId) {
             throw new common_1.ForbiddenException('O corretor só pode atribuir o lead a si mesmo');
         }
-        const updated = await this.prisma.lead.update({
+        const updated = await this.prisma.prospecto.update({
             where: { id },
             data: {
                 ...(dto.status !== undefined && { status: dto.status }),

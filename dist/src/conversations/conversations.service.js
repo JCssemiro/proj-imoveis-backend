@@ -27,7 +27,7 @@ let ConversationsService = class ConversationsService {
         const where = userType === 'client'
             ? { clientId: userId }
             : { brokerId: userId };
-        const list = await this.prisma.conversation.findMany({
+        const list = await this.prisma.conversa.findMany({
             where,
             orderBy: { updatedAt: 'desc' },
             include: {
@@ -40,7 +40,7 @@ let ConversationsService = class ConversationsService {
         return list.map((c) => this.toConversation(c, false));
     }
     async findOne(id, user) {
-        const conv = await this.prisma.conversation.findUnique({
+        const conv = await this.prisma.conversa.findUnique({
             where: { id },
             include: {
                 client: true,
@@ -60,13 +60,13 @@ let ConversationsService = class ConversationsService {
         if (dto.brokerId !== brokerId) {
             throw new common_1.ForbiddenException('Só é possível criar conversa para si mesmo');
         }
-        const existingConversation = await this.prisma.conversation.findUnique({
+        const existingConversation = await this.prisma.conversa.findUnique({
             where: { leadId: dto.leadId },
         });
         if (existingConversation) {
             throw new common_1.ConflictException('Já existe uma conversa para este lead');
         }
-        const lead = await this.prisma.lead.findUnique({
+        const lead = await this.prisma.prospecto.findUnique({
             where: { id: dto.leadId },
             include: { interest: { include: { compraOuAluguel: true, tipoImovel: true } } },
         });
@@ -77,7 +77,7 @@ let ConversationsService = class ConversationsService {
         }
         const summary = buildSummary(lead.interest);
         try {
-            const conversation = await this.prisma.conversation.create({
+            const conversation = await this.prisma.conversa.create({
                 data: {
                     clientId: dto.clientId,
                     brokerId: dto.brokerId,
@@ -102,7 +102,7 @@ let ConversationsService = class ConversationsService {
         }
     }
     async createMessage(conversationId, user, dto) {
-        const conv = await this.prisma.conversation.findUnique({
+        const conv = await this.prisma.conversa.findUnique({
             where: { id: conversationId },
         });
         if (!conv)
@@ -111,7 +111,7 @@ let ConversationsService = class ConversationsService {
             throw new common_1.ForbiddenException('Sem permissão para esta conversa');
         }
         const senderType = conv.clientId === user.sub ? client_1.SenderType.client : client_1.SenderType.broker;
-        const message = await this.prisma.message.create({
+        const message = await this.prisma.mensagem.create({
             data: {
                 conversationId,
                 senderId: user.sub,
@@ -120,7 +120,7 @@ let ConversationsService = class ConversationsService {
                 imageUrl: dto.imageUrl ?? undefined,
             },
         });
-        await this.prisma.conversation.update({
+        await this.prisma.conversa.update({
             where: { id: conversationId },
             data: { updatedAt: new Date() },
         });

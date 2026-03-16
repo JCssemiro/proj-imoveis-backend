@@ -17,7 +17,7 @@ let BrokersService = class BrokersService {
         this.prisma = prisma;
     }
     async findAll() {
-        const brokers = await this.prisma.user.findMany({
+        const brokers = await this.prisma.usuario.findMany({
             where: { type: 'broker' },
             include: {
                 _count: { select: { leadsAsBroker: true } },

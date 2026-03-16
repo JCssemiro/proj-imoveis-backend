@@ -33,7 +33,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         this.prisma = prisma;
     }
     async validate(payload) {
-        const user = await this.prisma.user.findUnique({
+        const user = await this.prisma.usuario.findUnique({
             where: { id: payload.sub },
         });
         if (!user)

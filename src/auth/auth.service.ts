@@ -33,7 +33,7 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (!user || user.type !== dto.type) {
       throw new UnauthorizedException('E-mail ou senha inválidos');
     }
@@ -43,10 +43,10 @@ export class AuthService {
   }
 
   async registerClient(dto: RegisterClientDto): Promise<AuthResponse> {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('E-mail já cadastrado');
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-    const user = await this.prisma.user.create({
+    const user = await this.prisma.usuario.create({
       data: {
         name: dto.name,
         email: dto.email,
@@ -60,10 +60,10 @@ export class AuthService {
   }
 
   async registerBroker(dto: RegisterBrokerDto): Promise<AuthResponse> {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('E-mail já cadastrado');
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-    const user = await this.prisma.user.create({
+    const user = await this.prisma.usuario.create({
       data: {
         name: dto.name,
         email: dto.email,
@@ -78,11 +78,11 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (!user) return; // Resposta genérica por segurança
     const token = randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
-    await this.prisma.user.update({
+    await this.prisma.usuario.update({
       where: { id: user.id },
       data: { resetPasswordToken: token, resetPasswordExpires: expires },
     });

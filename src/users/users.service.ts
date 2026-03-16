@@ -7,7 +7,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async getMe(userId: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.usuario.findUnique({
       where: { id: userId },
     });
     if (!user) throw new NotFoundException('Usuário não encontrado');
@@ -15,17 +15,17 @@ export class UsersService {
   }
 
   async updateMe(userId: string, dto: UpdateProfileDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.usuario.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Usuário não encontrado');
     if (dto.email !== undefined && dto.email !== user.email) {
-      const existing = await this.prisma.user.findUnique({
+      const existing = await this.prisma.usuario.findUnique({
         where: { email: dto.email },
       });
       if (existing) {
         throw new ConflictException('E-mail já está em uso por outra conta');
       }
     }
-    const updated = await this.prisma.user.update({
+    const updated = await this.prisma.usuario.update({
       where: { id: userId },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),

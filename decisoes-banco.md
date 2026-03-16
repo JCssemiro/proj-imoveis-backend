@@ -35,7 +35,7 @@ Este documento descreve todas as tabelas do banco de dados e as decisões de mod
 | Aspecto | Decisão |
 |--------|--------|
 | Chave primária | `TEXT` com UUID (gerado no app ou no banco). |
-| Nomes de tabelas | PascalCase no SQL (ex.: `Usuario`, `InteresseImovel`); mapeamento no Prisma conforme convenção. |
+| Nomes de tabelas | Minúsculas no banco (ex.: `usuario`, `interesseimovel`, `prospecto`, `conversa`, `mensagem`); modelos Prisma com PascalCase e mapeamento via `@@map`. |
 | Timestamps | `TIMESTAMP(3)` com precisão de milissegundos; `createdAt`/`updatedAt` com DEFAULT. |
 | Campos opcionais | Nullable quando o valor não é obrigatório; DEFAULT quando faz sentido (ex.: `notes DEFAULT ''`). |
 
@@ -245,12 +245,12 @@ Mensagens do chat entre cliente e corretor.
 
 | Origem | Destino | ON DELETE | Motivo |
 |--------|---------|-----------|--------|
-| InteresseImovel.clientId | Usuario | CASCADE | Interesses do cliente são removidos com a conta. |
-| InteresseImovel.*Id (parâmetros) | Tabelas de parâmetros | RESTRICT | Não apagar parâmetro ainda referenciado. |
-| Prospecto.interestId | InteresseImovel | CASCADE | Lead existe apenas com o interesse. |
-| Prospecto.brokerId | Usuario | SET NULL | Lead permanece; fica sem corretor atribuído. |
-| Conversa.clientId, brokerId, leadId | Usuario / Prospecto | CASCADE | Conversa é removida com usuário ou lead, conforme regra de negócio. |
-| Mensagem.conversationId, senderId | Conversa / Usuario | CASCADE | Mensagens e conversas são removidas em cascata. |
+| interesseimovel.clientId | usuario | CASCADE | Interesses do cliente são removidos com a conta. |
+| interesseimovel.*Id (parâmetros) | finalidade, tipoimovel, etc. | RESTRICT | Não apagar parâmetro ainda referenciado. |
+| prospecto.interestId | interesseimovel | CASCADE | Lead existe apenas com o interesse. |
+| prospecto.brokerId | usuario | SET NULL | Lead permanece; fica sem corretor atribuído. |
+| conversa.clientId, brokerId, leadId | usuario / prospecto | CASCADE | Conversa é removida com usuário ou lead, conforme regra de negócio. |
+| mensagem.conversationId, senderId | conversa / usuario | CASCADE | Mensagens e conversas são removidas em cascata. |
 
 ### 9.2 Decisões
 
@@ -271,19 +271,21 @@ Mensagens do chat entre cliente e corretor.
 
 ### 10.2 Resumo por tabela
 
-| Tabela | Índices |
-|--------|---------|
-| Parâmetros | UNIQUE(codigo); INDEX(ativo, ordem). |
-| Usuario | UNIQUE(email); INDEX(type). |
-| InteresseImovel | clientId; createdAt; isActive; (clientId, isActive); (finalidadeId, tipoImovelId); (minPrice, maxPrice). |
-| Prospecto | UNIQUE(interestId); brokerId; status; createdAt; (brokerId, status); parcial(status) WHERE status = 'new'. |
-| Conversa | UNIQUE(leadId); clientId; brokerId; updatedAt. |
-| Mensagem | conversationId; createdAt; (conversationId, createdAt). |
+(Nomes físicos no banco em minúsculas: `finalidade`, `tipoimovel`, `tipocasa`, `compraoualuguel`, `mobilia`, `usuario`, `interesseimovel`, `prospecto`, `conversa`, `mensagem`.)
+
+| Tabela (física) | Índices |
+|------------------|---------|
+| Parâmetros (finalidade, tipoimovel, etc.) | UNIQUE(codigo); INDEX(ativo, ordem). |
+| usuario | UNIQUE(email); INDEX(type). |
+| interesseimovel | clientId; createdAt; isActive; (clientId, isActive); (finalidadeId, tipoImovelId); (minPrice, maxPrice). |
+| prospecto | UNIQUE(interestId); brokerId; status; createdAt; (brokerId, status); parcial(status) WHERE status = 'new'. |
+| conversa | UNIQUE(leadId); clientId; brokerId; updatedAt. |
+| mensagem | conversationId; createdAt; (conversationId, createdAt). |
 
 ### 10.3 Possíveis evoluções (BD.md)
 
-- Índice GIN em `InteresseImovel.locations` e `InteresseImovel.features` se houver busca por conteúdo do array.
-- Índice composto em Conversa `(brokerId, updatedAt DESC)` ou `(clientId, updatedAt DESC)` se listagens por data forem críticas.
+- Índice GIN em `interesseimovel.locations` e `interesseimovel.features` se houver busca por conteúdo do array.
+- Índice composto em conversa `(brokerId, updatedAt DESC)` ou `(clientId, updatedAt DESC)` se listagens por data forem críticas.
 
 ---
 
@@ -295,6 +297,6 @@ O modelo do ImobiConnect foi desenhado com:
 2. **Tipos adequados:** inteiros para números e preços, TEXT para textos e UUIDs, arrays nativos para listas.
 3. **Confiabilidade:** CHECKs em faixas e valores numéricos; FKs com políticas explícitas (CASCADE, RESTRICT, SET NULL).
 4. **Performance:** índices em FKs e em colunas de filtro/ordenação; compostos e parcial onde há padrões de acesso conhecidos.
-5. **Escalabilidade:** UUIDs como PKs; espaço para GIN em arrays e particionamento futuro (ex.: Mensagem por tempo).
+5. **Escalabilidade:** UUIDs como PKs; espaço para GIN em arrays e particionamento futuro (ex.: mensagem por tempo).
 
 Este relatório serve como referência para manutenção do schema e para futuras migrações e otimizações.

@@ -41,21 +41,21 @@ async function seedParametros() {
         });
     }
     for (const t of tiposImovel) {
-        await prisma.tipoImovel.upsert({
+        await prisma.tipoimovel.upsert({
             where: { codigo: t.codigo },
             update: { label: t.label, ordem: t.ordem },
             create: t,
         });
     }
     for (const t of tiposCasa) {
-        await prisma.tipoCasa.upsert({
+        await prisma.tipocasa.upsert({
             where: { codigo: t.codigo },
             update: { label: t.label, ordem: t.ordem },
             create: t,
         });
     }
     for (const c of compraOuAluguel) {
-        await prisma.compraOuAluguel.upsert({
+        await prisma.compraoualuguel.upsert({
             where: { codigo: c.codigo },
             update: { label: c.label, ordem: c.ordem },
             create: c,
@@ -68,12 +68,12 @@ async function seedParametros() {
             create: m,
         });
     }
-    console.log('Seed: parâmetros (Finalidade, TipoImovel, TipoCasa, CompraOuAluguel, Mobilia) criados/atualizados.');
+    console.log('Seed: parâmetros (finalidade, tipoimovel, tipocasa, compraoualuguel, mobilia) criados/atualizados.');
 }
 async function main() {
     await seedParametros();
     const passwordHash = await bcrypt.hash('senha123', 10);
-    const client = await prisma.user.upsert({
+    const client = await prisma.usuario.upsert({
         where: { email: 'cliente@example.com' },
         update: {},
         create: {
@@ -85,7 +85,7 @@ async function main() {
             cpf: '12345678900',
         },
     });
-    const broker = await prisma.user.upsert({
+    const broker = await prisma.usuario.upsert({
         where: { email: 'corretor@example.com' },
         update: {},
         create: {

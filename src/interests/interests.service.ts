@@ -27,7 +27,7 @@ export class InterestsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(clientId: string, isActive?: boolean) {
-    const list = await this.prisma.propertyInterest.findMany({
+    const list = await this.prisma.interesseimovel.findMany({
       where: {
         clientId,
         ...(isActive !== undefined && { isActive }),
@@ -39,7 +39,7 @@ export class InterestsService {
   }
 
   async findOne(id: string, clientId: string) {
-    const interest = await this.prisma.propertyInterest.findUnique({
+    const interest = await this.prisma.interesseimovel.findUnique({
       where: { id },
       include: includeRelations,
     });
@@ -50,7 +50,7 @@ export class InterestsService {
   }
 
   async create(clientId: string, dto: CreateInterestDto) {
-    const client = await this.prisma.user.findUnique({
+    const client = await this.prisma.usuario.findUnique({
       where: { id: clientId },
     });
     if (!client) throw new NotFoundException('Cliente não encontrado');
@@ -62,17 +62,17 @@ export class InterestsService {
     }
 
     const [compra, finalidade, tipoImovel, tipoCasa, mobilia] = await Promise.all([
-      this.prisma.compraOuAluguel.findUnique({ where: { codigo: dto.compraOuAluguel } }),
+      this.prisma.compraoualuguel.findUnique({ where: { codigo: dto.compraOuAluguel } }),
       this.prisma.finalidade.findUnique({ where: { codigo: dto.finalidade } }),
-      this.prisma.tipoImovel.findUnique({ where: { codigo: dto.tipoImovel } }),
-      this.prisma.tipoCasa.findFirst({ where: { codigo: dto.tipoCasa ?? 'vazio' } }).then((r) => r ?? this.prisma.tipoCasa.findFirst()),
+      this.prisma.tipoimovel.findUnique({ where: { codigo: dto.tipoImovel } }),
+      this.prisma.tipocasa.findFirst({ where: { codigo: dto.tipoCasa ?? 'vazio' } }).then((r) => r ?? this.prisma.tipocasa.findFirst()),
       this.prisma.mobilia.findFirst({ where: { codigo: dto.mobilia ?? 'sem_mobilia' } }).then((r) => r ?? this.prisma.mobilia.findFirst()),
     ]);
     if (!compra || !finalidade || !tipoImovel || !tipoCasa || !mobilia) {
-      throw new BadRequestException('Parâmetros de interesse não encontrados. Execute o seed do banco (Finalidade, TipoImovel, CompraOuAluguel, TipoCasa, Mobilia).');
+      throw new BadRequestException('Parâmetros de interesse não encontrados. Execute o seed do banco (finalidade, tipoimovel, compraoualuguel, tipocasa, mobilia).');
     }
 
-    const created = await this.prisma.propertyInterest.create({
+    const created = await this.prisma.interesseimovel.create({
       data: {
         clientId,
         locations: dto.localizacoes ?? [],
@@ -92,11 +92,11 @@ export class InterestsService {
       },
     });
 
-    await this.prisma.lead.create({
+    await this.prisma.prospecto.create({
       data: { interestId: created.id, status: LeadStatus.new },
     });
 
-    const interest = await this.prisma.propertyInterest.findUnique({
+    const interest = await this.prisma.interesseimovel.findUnique({
       where: { id: created.id },
       include: includeRelations,
     });
@@ -105,7 +105,7 @@ export class InterestsService {
   }
 
   async update(id: string, clientId: string, dto: UpdateInterestDto) {
-    const interest = await this.prisma.propertyInterest.findUnique({
+    const interest = await this.prisma.interesseimovel.findUnique({
       where: { id },
       include: includeRelations,
     });
@@ -151,7 +151,7 @@ export class InterestsService {
     };
 
     if (dto.compraOuAluguel !== undefined) {
-      const rec = await this.prisma.compraOuAluguel.findUnique({ where: { codigo: dto.compraOuAluguel } });
+      const rec = await this.prisma.compraoualuguel.findUnique({ where: { codigo: dto.compraOuAluguel } });
       if (!rec) throw new BadRequestException('compraOuAluguel inválido');
       data.compraOuAluguelId = rec.id;
     }
@@ -161,12 +161,12 @@ export class InterestsService {
       data.finalidadeId = rec.id;
     }
     if (dto.tipoImovel !== undefined) {
-      const rec = await this.prisma.tipoImovel.findUnique({ where: { codigo: dto.tipoImovel } });
+      const rec = await this.prisma.tipoimovel.findUnique({ where: { codigo: dto.tipoImovel } });
       if (!rec) throw new BadRequestException('tipoImovel inválido');
       data.tipoImovelId = rec.id;
     }
     if (dto.tipoCasa !== undefined) {
-      const rec = await this.prisma.tipoCasa.findFirst({ where: { codigo: dto.tipoCasa ?? 'vazio' } }).then((r) => r ?? this.prisma.tipoCasa.findFirst());
+      const rec = await this.prisma.tipocasa.findFirst({ where: { codigo: dto.tipoCasa ?? 'vazio' } }).then((r) => r ?? this.prisma.tipocasa.findFirst());
       if (!rec) throw new BadRequestException('tipoCasa inválido');
       data.tipoCasaId = rec.id;
     }
@@ -176,7 +176,7 @@ export class InterestsService {
       data.mobiliaId = rec.id;
     }
 
-    const updated = await this.prisma.propertyInterest.update({
+    const updated = await this.prisma.interesseimovel.update({
       where: { id },
       data,
       include: includeRelations,
@@ -185,13 +185,13 @@ export class InterestsService {
   }
 
   async remove(id: string, clientId: string) {
-    const interest = await this.prisma.propertyInterest.findUnique({
+    const interest = await this.prisma.interesseimovel.findUnique({
       where: { id },
     });
     if (!interest || interest.clientId !== clientId) {
       throw new NotFoundException('Interesse não encontrado');
     }
-    await this.prisma.propertyInterest.update({
+    await this.prisma.interesseimovel.update({
       where: { id },
       data: { isActive: false },
     });

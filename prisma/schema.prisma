@@ -1,6 +1,6 @@
 // ImobiConnect - PostgreSQL + Prisma
 // API-ARQ.md / API-BACKEND-SPEC.md
-// Schema otimizado: parametrização, tipos corretos, índices e integridade
+// Schema: nomes dos models em minúsculas (igual às tabelas no banco)
 
 generator client {
   provider = "prisma-client-js"
@@ -32,7 +32,7 @@ enum SenderType {
 // Tabelas de parâmetros (parametrização: novos valores sem alterar schema)
 // =============================================================================
 
-model Finalidade {
+model finalidade {
   id        String   @id @default(uuid())
   codigo    String   @unique
   label     String
@@ -40,13 +40,13 @@ model Finalidade {
   ordem     Int      @default(0)
   createdAt DateTime @default(now())
 
-  interesses PropertyInterest[]
+  interesses interesseimovel[]
 
   @@index([ativo, ordem])
   @@map("finalidade")
 }
 
-model TipoImovel {
+model tipoimovel {
   id        String   @id @default(uuid())
   codigo    String   @unique
   label     String
@@ -54,13 +54,13 @@ model TipoImovel {
   ordem     Int      @default(0)
   createdAt DateTime @default(now())
 
-  interesses PropertyInterest[]
+  interesses interesseimovel[]
 
   @@index([ativo, ordem])
   @@map("tipoimovel")
 }
 
-model TipoCasa {
+model tipocasa {
   id        String   @id @default(uuid())
   codigo    String   @unique
   label     String
@@ -68,13 +68,13 @@ model TipoCasa {
   ordem     Int      @default(0)
   createdAt DateTime @default(now())
 
-  interesses PropertyInterest[]
+  interesses interesseimovel[]
 
   @@index([ativo, ordem])
   @@map("tipocasa")
 }
 
-model CompraOuAluguel {
+model compraoualuguel {
   id        String   @id @default(uuid())
   codigo    String   @unique
   label     String
@@ -82,13 +82,13 @@ model CompraOuAluguel {
   ordem     Int      @default(0)
   createdAt DateTime @default(now())
 
-  interesses PropertyInterest[]
+  interesses interesseimovel[]
 
   @@index([ativo, ordem])
   @@map("compraoualuguel")
 }
 
-model Mobilia {
+model mobilia {
   id        String   @id @default(uuid())
   codigo    String   @unique
   label     String
@@ -96,17 +96,17 @@ model Mobilia {
   ordem     Int      @default(0)
   createdAt DateTime @default(now())
 
-  interesses PropertyInterest[]
+  interesses interesseimovel[]
 
   @@index([ativo, ordem])
   @@map("mobilia")
 }
 
 // =============================================================================
-// Usuario
+// usuario
 // =============================================================================
 
-model User {
+model usuario {
   id                    String    @id @default(uuid())
   name                  String
   email                 String    @unique
@@ -122,35 +122,35 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  interestsAsClient     PropertyInterest[]
-  leadsAsBroker         Lead[]
-  conversationsAsClient Conversation[]  @relation("ClientConversations")
-  conversationsAsBroker Conversation[]  @relation("BrokerConversations")
-  messagesSent          Message[]
+  interestsAsClient     interesseimovel[]
+  leadsAsBroker         prospecto[]
+  conversationsAsClient conversa[]  @relation("ClientConversations")
+  conversationsAsBroker conversa[]  @relation("BrokerConversations")
+  messagesSent          mensagem[]
 
   @@index([type])
   @@map("usuario")
 }
 
 // =============================================================================
-// InteresseImovel (FKs para parâmetros, tipos numéricos para filtros/performance)
+// interesseimovel (FKs para parâmetros, tipos numéricos para filtros/performance)
 // =============================================================================
 
-model PropertyInterest {
+model interesseimovel {
   id                  String   @id @default(uuid())
   clientId            String
-  client              User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client              usuario  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   locations           String[]
   compraOuAluguelId   String
-  compraOuAluguel     CompraOuAluguel @relation(fields: [compraOuAluguelId], references: [id], onDelete: Restrict)
+  compraOuAluguel     compraoualuguel @relation(fields: [compraOuAluguelId], references: [id], onDelete: Restrict)
   finalidadeId        String
-  finalidade          Finalidade     @relation(fields: [finalidadeId], references: [id], onDelete: Restrict)
+  finalidade          finalidade     @relation(fields: [finalidadeId], references: [id], onDelete: Restrict)
   tipoImovelId        String
-  tipoImovel          TipoImovel     @relation(fields: [tipoImovelId], references: [id], onDelete: Restrict)
+  tipoImovel          tipoimovel     @relation(fields: [tipoImovelId], references: [id], onDelete: Restrict)
   tipoCasaId          String
-  tipoCasa            TipoCasa       @relation(fields: [tipoCasaId], references: [id], onDelete: Restrict)
+  tipoCasa            tipocasa       @relation(fields: [tipoCasaId], references: [id], onDelete: Restrict)
   mobiliaId           String
-  mobilia             Mobilia        @relation(fields: [mobiliaId], references: [id], onDelete: Restrict)
+  mobilia             mobilia        @relation(fields: [mobiliaId], references: [id], onDelete: Restrict)
   quartos             Int?           // NULL = indiferente
   suites              Int?
   metragemTerreno     Int?           // m²
@@ -162,7 +162,7 @@ model PropertyInterest {
   isActive            Boolean        @default(true)
   createdAt           DateTime       @default(now())
 
-  lead                Lead?
+  lead                prospecto?
 
   @@index([clientId])
   @@index([createdAt])
@@ -173,16 +173,16 @@ model PropertyInterest {
   @@map("interesseimovel")
 }
 
-model Lead {
+model prospecto {
   id         String     @id @default(uuid())
   interestId String     @unique
-  interest   PropertyInterest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  interest   interesseimovel @relation(fields: [interestId], references: [id], onDelete: Cascade)
   brokerId   String?
-  broker     User?      @relation(fields: [brokerId], references: [id], onDelete: SetNull)
+  broker     usuario?   @relation(fields: [brokerId], references: [id], onDelete: SetNull)
   status     LeadStatus @default(new)
   createdAt  DateTime   @default(now())
 
-  conversation Conversation?
+  conversation conversa?
 
   @@index([brokerId])
   @@index([status])
@@ -191,18 +191,18 @@ model Lead {
   @@map("prospecto")
 }
 
-model Conversation {
+model conversa {
   id                      String    @id @default(uuid())
   clientId                String
-  client                  User      @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
+  client                  usuario   @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
   brokerId                String
-  broker                  User      @relation("BrokerConversations", fields: [brokerId], references: [id], onDelete: Cascade)
+  broker                  usuario   @relation("BrokerConversations", fields: [brokerId], references: [id], onDelete: Cascade)
   leadId                  String    @unique
-  lead                    Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead                    prospecto @relation(fields: [leadId], references: [id], onDelete: Cascade)
   propertyInterestSummary String
   updatedAt               DateTime  @updatedAt
 
-  messages Message[]
+  messages mensagem[]
 
   @@index([clientId])
   @@index([brokerId])
@@ -210,12 +210,12 @@ model Conversation {
   @@map("conversa")
 }
 
-model Message {
+model mensagem {
   id             String     @id @default(uuid())
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation   conversa   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderId       String
-  sender         User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender         usuario    @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderType     SenderType
   content        String
   imageUrl       String?

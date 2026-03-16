@@ -23,7 +23,7 @@ let AuthService = class AuthService {
         this.jwt = jwt;
     }
     async login(dto) {
-        const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
         if (!user || user.type !== dto.type) {
             throw new common_1.UnauthorizedException('E-mail ou senha inválidos');
         }
@@ -33,11 +33,11 @@ let AuthService = class AuthService {
         return this.buildAuthResponse(user);
     }
     async registerClient(dto) {
-        const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
         if (existing)
             throw new common_1.ConflictException('E-mail já cadastrado');
         const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-        const user = await this.prisma.user.create({
+        const user = await this.prisma.usuario.create({
             data: {
                 name: dto.name,
                 email: dto.email,
@@ -50,11 +50,11 @@ let AuthService = class AuthService {
         return this.buildAuthResponse(user);
     }
     async registerBroker(dto) {
-        const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
         if (existing)
             throw new common_1.ConflictException('E-mail já cadastrado');
         const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-        const user = await this.prisma.user.create({
+        const user = await this.prisma.usuario.create({
             data: {
                 name: dto.name,
                 email: dto.email,
@@ -68,12 +68,12 @@ let AuthService = class AuthService {
         return this.buildAuthResponse(user);
     }
     async forgotPassword(dto) {
-        const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
         if (!user)
             return;
         const token = (0, crypto_1.randomBytes)(32).toString('hex');
         const expires = new Date(Date.now() + 60 * 60 * 1000);
-        await this.prisma.user.update({
+        await this.prisma.usuario.update({
             where: { id: user.id },
             data: { resetPasswordToken: token, resetPasswordExpires: expires },
         });

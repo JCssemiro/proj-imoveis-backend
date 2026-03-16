@@ -17,7 +17,7 @@ let UsersService = class UsersService {
         this.prisma = prisma;
     }
     async getMe(userId) {
-        const user = await this.prisma.user.findUnique({
+        const user = await this.prisma.usuario.findUnique({
             where: { id: userId },
         });
         if (!user)
@@ -25,18 +25,18 @@ let UsersService = class UsersService {
         return this.toUserResponse(user);
     }
     async updateMe(userId, dto) {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const user = await this.prisma.usuario.findUnique({ where: { id: userId } });
         if (!user)
             throw new common_1.NotFoundException('Usuário não encontrado');
         if (dto.email !== undefined && dto.email !== user.email) {
-            const existing = await this.prisma.user.findUnique({
+            const existing = await this.prisma.usuario.findUnique({
                 where: { email: dto.email },
             });
             if (existing) {
                 throw new common_1.ConflictException('E-mail já está em uso por outra conta');
             }
         }
-        const updated = await this.prisma.user.update({
+        const updated = await this.prisma.usuario.update({
             where: { id: userId },
             data: {
                 ...(dto.name !== undefined && { name: dto.name }),

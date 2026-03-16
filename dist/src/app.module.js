@@ -12,6 +12,7 @@ const config_1 = require("@nestjs/config");
 const throttler_1 = require("@nestjs/throttler");
 const core_1 = require("@nestjs/core");
 const app_controller_1 = require("./app.controller");
+const swagger_docs_controller_1 = require("./swagger-docs.controller");
 const prisma_module_1 = require("./prisma/prisma.module");
 const jwt_auth_guard_1 = require("./common/guards/jwt-auth.guard");
 const throttler_2 = require("@nestjs/throttler");
@@ -26,7 +27,7 @@ let AppModule = class AppModule {
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        controllers: [app_controller_1.AppController],
+        controllers: [app_controller_1.AppController, swagger_docs_controller_1.SwaggerDocsController],
         providers: [
             { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_1.JwtAuthGuard },
             { provide: core_1.APP_GUARD, useClass: throttler_2.ThrottlerGuard },

@@ -27,7 +27,7 @@ export class ConversationsService {
       userType === 'client'
         ? { clientId: userId }
         : { brokerId: userId };
-    const list = await this.prisma.conversation.findMany({
+    const list = await this.prisma.conversa.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
       include: {
@@ -41,7 +41,7 @@ export class ConversationsService {
   }
 
   async findOne(id: string, user: JwtPayload) {
-    const conv = await this.prisma.conversation.findUnique({
+    const conv = await this.prisma.conversa.findUnique({
       where: { id },
       include: {
         client: true,
@@ -61,13 +61,13 @@ export class ConversationsService {
     if (dto.brokerId !== brokerId) {
       throw new ForbiddenException('Só é possível criar conversa para si mesmo');
     }
-    const existingConversation = await this.prisma.conversation.findUnique({
+    const existingConversation = await this.prisma.conversa.findUnique({
       where: { leadId: dto.leadId },
     });
     if (existingConversation) {
       throw new ConflictException('Já existe uma conversa para este lead');
     }
-    const lead = await this.prisma.lead.findUnique({
+    const lead = await this.prisma.prospecto.findUnique({
       where: { id: dto.leadId },
       include: { interest: { include: { compraOuAluguel: true, tipoImovel: true } } },
     });
@@ -77,7 +77,7 @@ export class ConversationsService {
     }
     const summary = buildSummary(lead.interest);
     try {
-      const conversation = await this.prisma.conversation.create({
+      const conversation = await this.prisma.conversa.create({
         data: {
           clientId: dto.clientId,
           brokerId: dto.brokerId,
@@ -106,7 +106,7 @@ export class ConversationsService {
     user: JwtPayload,
     dto: CreateMessageDto,
   ) {
-    const conv = await this.prisma.conversation.findUnique({
+    const conv = await this.prisma.conversa.findUnique({
       where: { id: conversationId },
     });
     if (!conv) throw new NotFoundException('Conversa não encontrada');
@@ -114,7 +114,7 @@ export class ConversationsService {
       throw new ForbiddenException('Sem permissão para esta conversa');
     }
     const senderType: SenderType = conv.clientId === user.sub ? SenderType.client : SenderType.broker;
-    const message = await this.prisma.message.create({
+    const message = await this.prisma.mensagem.create({
       data: {
         conversationId,
         senderId: user.sub,
@@ -123,7 +123,7 @@ export class ConversationsService {
         imageUrl: dto.imageUrl ?? undefined,
       },
     });
-    await this.prisma.conversation.update({
+    await this.prisma.conversa.update({
       where: { id: conversationId },
       data: { updatedAt: new Date() },
     });
