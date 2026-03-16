@@ -43,37 +43,7 @@ export async function createApp(): Promise<NestFastifyApplication> {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Servir página de docs com assets do CDN *no Fastify* antes do Swagger, para ter prioridade.
-  const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
-  const docsHtml = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>ImobiConnect API - Documentação</title>
-  <link rel="stylesheet" href="${SWAGGER_UI_CDN}/swagger-ui.css"/>
-</head>
-<body>
-  <div id="swagger-ui"></div>
-  <script src="${SWAGGER_UI_CDN}/swagger-ui-bundle.js"></script>
-  <script src="${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js"></script>
-  <script>
-    window.onload = function() {
-      window.ui = SwaggerUIBundle({
-        url: '/api/v1/docs-json',
-        dom_id: '#swagger-ui',
-        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-        plugins: [SwaggerUIBundle.plugins.DownloadUrl],
-        layout: 'StandaloneLayout'
-      });
-    };
-  </script>
-</body>
-</html>`;
-  const fastify = app.getHttpAdapter().getInstance();
-  fastify.get('/api/v1/docs', (_, reply) => reply.type('text/html; charset=utf-8').send(docsHtml));
-  fastify.get('/api/v1/docs/', (_, reply) => reply.type('text/html; charset=utf-8').send(docsHtml));
-
+  // Swagger: apenas JSON em /api/v1/docs-json. A página HTML em /api/v1/docs é servida por SwaggerDocsController.
   const swaggerConfig = new DocumentBuilder()
     .setTitle('ImobiConnect API')
     .setDescription('API do projeto ImobiConnect - gestão de imóveis, leads e conversas.')
