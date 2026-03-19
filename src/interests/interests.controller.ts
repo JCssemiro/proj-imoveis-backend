@@ -29,15 +29,19 @@ export class InterestsController {
   constructor(private interests: InterestsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar interesses do cliente' })
+  @ApiOperation({ summary: 'Listar interesses do cliente (paginado)' })
   @ApiQuery({ name: 'isActive', required: false, description: 'Filtrar por ativo (true/false)' })
+  @ApiQuery({ name: 'pagina', required: false, description: 'Página (padrão: 1)' })
+  @ApiQuery({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' })
   findAll(
     @CurrentUser('sub') clientId: string,
     @Query('isActive') isActive?: string,
+    @Query('pagina') pagina?: string,
+    @Query('tamanho') tamanho?: string,
   ) {
     const active =
       isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-    return this.interests.findAll(clientId, active);
+    return this.interests.findAll(clientId, active, { pagina, tamanho });
   }
 
   @Get(':id')
@@ -47,7 +51,11 @@ export class InterestsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Criar interesse de imóvel' })
+  @ApiOperation({
+    summary: 'Criar interesse de imóvel',
+    description:
+      'Envie IDs (UUID) retornados por GET /parametros: finalidadeId, tipoImovelId, tipoCasaId (opcional), mobiliaId (opcional), featureIds (array). compraOuAluguel: "compra" ou "aluguel".',
+  })
   create(@CurrentUser('sub') clientId: string, @Body() dto: CreateInterestDto) {
     return this.interests.create(clientId, dto);
   }

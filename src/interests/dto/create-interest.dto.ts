@@ -6,103 +6,115 @@ import {
   IsOptional,
   IsIn,
   Min,
+  MaxLength,
+  IsUUID,
+  ValidateNested,
 } from 'class-validator';
-
-const compraOuAluguel = ['compra', 'aluguel'];
-const finalidade = ['residencial', 'comercial'];
-const tipoImovel = [
-  'terreno_via_publica',
-  'terreno_condominio',
-  'casa_condominio',
-  'casa_via_publica',
-  'galpao',
-  'apartamento',
-  'sobrado',
-  'outro',
-];
-const tipoCasa = ['sobrado', 'terreo', ''];
-const quartos = ['0', '1', '2', '3', '4', '5', '6+'];
-const suites = ['0', '1', '2', '3', '4+'];
-const mobilia = ['100_mobiliado', 'somente_planejados', 'sem_mobilia'];
+import { Type } from 'class-transformer';
+import { LocalizacaoInteresseDto } from './localizacao-interesse.dto';
 
 export class CreateInterestDto {
-  @ApiProperty({ description: 'Regiões de interesse', example: ['Centro', 'Zona Sul'] })
+  @ApiPropertyOptional({
+    description: 'Localizações de interesse (CEP, município cod IBGE, bairro)',
+    type: [LocalizacaoInteresseDto],
+    example: [{ cep: '01310100', bairro: 'Bela Vista' }, { municipiocodibge: '3550308' }],
+  })
+  @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  localizacoes: string[];
+  @ValidateNested({ each: true })
+  @Type(() => LocalizacaoInteresseDto)
+  localizacoes?: LocalizacaoInteresseDto[];
 
-  @ApiProperty({ enum: compraOuAluguel })
-  @IsIn(compraOuAluguel)
-  compraOuAluguel: string;
+  @ApiProperty({
+    description: 'Compra ou aluguel. Valores: compra | aluguel (obter de GET /parametros/compraoualuguel)',
+    enum: ['compra', 'aluguel'],
+  })
+  @IsIn(['compra', 'aluguel'])
+  compraOuAluguel: 'compra' | 'aluguel';
 
-  @ApiProperty({ enum: finalidade })
-  @IsIn(finalidade)
-  finalidade: string;
+  @ApiProperty({
+    description: 'ID da finalidade (obter de GET /parametros/finalidade)',
+    example: 'uuid',
+  })
+  @IsUUID('4')
+  finalidadeId: string;
 
-  @ApiProperty({ enum: tipoImovel })
-  @IsIn(tipoImovel)
-  tipoImovel: string;
+  @ApiProperty({
+    description: 'ID do tipo de imóvel (obter de GET /parametros/tipoimovel)',
+    example: 'uuid',
+  })
+  @IsUUID('4')
+  tipoImovelId: string;
 
-  @ApiPropertyOptional({ enum: tipoCasa })
+  @ApiPropertyOptional({
+    description: 'ID do tipo de casa (obter de GET /parametros/tipocasa). Se omitido, usa o primeiro ativo por ordem.',
+  })
   @IsOptional()
-  @IsIn(tipoCasa)
-  tipoCasa?: string;
+  @IsUUID('4')
+  tipoCasaId?: string;
 
-  @ApiPropertyOptional({ enum: quartos })
+  @ApiPropertyOptional({ description: 'Quantidade de quartos (ex: 2, 6+)' })
   @IsOptional()
-  @IsIn(quartos)
+  @IsString()
   quartos?: string;
 
-  @ApiPropertyOptional({ enum: suites })
+  @ApiPropertyOptional({ description: 'Quantidade de suítes (ex: 1, 4+)' })
   @IsOptional()
-  @IsIn(suites)
-  suites?: string;
+  @IsString()
+  suites?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  banheiros?: string;
+  banheiros?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  garagens?: string;
+  garagens?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  metragemTerreno?: string;
+  metragemTerreno?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   areaConstruida?: string;
 
-  @ApiPropertyOptional({ enum: mobilia })
+  @ApiPropertyOptional({
+    description: 'ID da mobília (obter de GET /parametros/mobilia). Se omitido, usa o primeiro ativo por ordem.',
+  })
   @IsOptional()
-  @IsIn(mobilia)
-  mobilia?: string;
+  @IsUUID('4')
+  mobiliaId?: string;
 
   @ApiPropertyOptional({ minimum: 0 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  valorMinimo?: number;
+  valorMinimo?: number | null;
 
   @ApiPropertyOptional({ minimum: 0 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  valorMaximo?: number;
+  valorMaximo?: number | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'IDs das features (obter de GET /parametros/feature). Array de UUID.',
+    type: [String],
+    example: ['uuid1', 'uuid2'],
+  })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  caracteristicas?: string[];
+  @IsUUID('4', { each: true })
+  featureIds?: string[];
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ maxLength: 5000 })
   @IsOptional()
   @IsString()
+  @MaxLength(5000, { message: 'Observações com no máximo 5000 caracteres' })
   observacoes?: string;
 }

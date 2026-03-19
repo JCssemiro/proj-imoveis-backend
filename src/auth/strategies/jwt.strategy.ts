@@ -33,7 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     return {
       sub: user.id,
       email: user.email,
-      type: user.type as 'client' | 'broker',
+      type: user.tipo as 'client' | 'broker',
     };
   }
 }

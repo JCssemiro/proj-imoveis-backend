@@ -72,6 +72,7 @@ Backend da plataforma ImobiConnect em **NestJS** com **Fastify**, **Prisma** e *
 
 - **Health:** `GET /api/v1/health`
 - **Auth:** `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `POST /api/v1/auth/recuperar-senha`
+- **Parâmetros (público):** `GET /api/v1/parametros` (todos) ou `GET /api/v1/parametros/finalidade`, `tipoimovel`, `tipocasa`, `mobilia`, `feature`, `plano`, `compraoualuguel` — use os **IDs** (campo `id`) retornados nos payloads de cadastro de interesse e no filtro de leads (`tipoImovelId`). Para compra/aluguel use o campo `valor`.
 - **Usuário (perfil):** `GET /api/v1/usuario/eu`, `PATCH /api/v1/usuario/eu`
 - **Interesse (cliente):** `GET/POST/PATCH/DELETE /api/v1/interesse`, `GET/PATCH/DELETE /api/v1/interesse/:id`
 - **Prospecto (corretor):** `GET /api/v1/prospecto`, `GET/PATCH /api/v1/prospecto/:id`

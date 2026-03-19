@@ -13,6 +13,7 @@ import { InterestsModule } from './interests/interests.module';
 import { LeadsModule } from './leads/leads.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { BrokersModule } from './brokers/brokers.module';
+import { ParametrosModule } from './parametros/parametros.module';
 
 @Module({
   controllers: [AppController, SwaggerDocsController],
@@ -34,6 +35,7 @@ import { BrokersModule } from './brokers/brokers.module';
     LeadsModule,
     ConversationsModule,
     BrokersModule,
+    ParametrosModule,
   ],
 })
 export class AppModule {}

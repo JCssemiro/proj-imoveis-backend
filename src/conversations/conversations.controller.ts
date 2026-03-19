@@ -2,14 +2,16 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
+  Query,
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ConversationsService } from './conversations.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -24,9 +26,15 @@ export class ConversationsController {
   constructor(private conversations: ConversationsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar conversas do usuário' })
-  findAll(@CurrentUser() user: JwtPayload) {
-    return this.conversations.findAll(user.sub, user.type);
+  @ApiOperation({ summary: 'Listar conversas do usuário (paginado)' })
+  @ApiQuery({ name: 'pagina', required: false })
+  @ApiQuery({ name: 'tamanho', required: false })
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query('pagina') pagina?: string,
+    @Query('tamanho') tamanho?: string,
+  ) {
+    return this.conversations.findAll(user.sub, user.type, { pagina, tamanho });
   }
 
   @Get(':id')
@@ -56,5 +64,17 @@ export class ConversationsController {
     @Body() dto: CreateMessageDto,
   ) {
     return this.conversations.createMessage(id, user, dto);
+  }
+
+  @Patch(':id/encerrar')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RolesGuard)
+  @Roles('client')
+  @ApiOperation({ summary: 'Encerrar chat (somente cliente)' })
+  encerrar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('sub') clientId: string,
+  ) {
+    return this.conversations.encerrar(id, clientId);
   }
 }

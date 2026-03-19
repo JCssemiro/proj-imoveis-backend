@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterClientDto, RegisterBrokerDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { UserType } from '@prisma/client';
+import { tipousuario } from '@prisma/client';
 import { randomBytes } from 'crypto';
 
 const SALT_ROUNDS = 10;
@@ -34,10 +34,10 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthResponse> {
     const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
-    if (!user || user.type !== dto.type) {
+    if (!user || user.tipo !== dto.type) {
       throw new UnauthorizedException('E-mail ou senha inválidos');
     }
-    const valid = await bcrypt.compare(dto.password, user.passwordHash);
+    const valid = await bcrypt.compare(dto.password, user.senhahash);
     if (!valid) throw new UnauthorizedException('E-mail ou senha inválidos');
     return this.buildAuthResponse(user);
   }
@@ -45,15 +45,19 @@ export class AuthService {
   async registerClient(dto: RegisterClientDto): Promise<AuthResponse> {
     const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('E-mail já cadastrado');
+
+    const existingCpf = await this.prisma.usuario.findFirst({ where: { cpf: dto.cpf } });
+    if (existingCpf) throw new ConflictException('CPF já cadastrado');
+
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     const user = await this.prisma.usuario.create({
       data: {
-        name: dto.name,
+        nome: dto.name,
         email: dto.email,
-        phone: dto.phone,
+        telefone: dto.phone,
         cpf: dto.cpf,
-        passwordHash,
-        type: UserType.client,
+        senhahash: passwordHash,
+        tipo: tipousuario.client,
       },
     });
     return this.buildAuthResponse(user);
@@ -62,16 +66,20 @@ export class AuthService {
   async registerBroker(dto: RegisterBrokerDto): Promise<AuthResponse> {
     const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('E-mail já cadastrado');
+
+    const existingCreci = await this.prisma.usuario.findFirst({ where: { creci: dto.creci } });
+    if (existingCreci) throw new ConflictException('CRECI já cadastrado');
+
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     const user = await this.prisma.usuario.create({
       data: {
-        name: dto.name,
+        nome: dto.name,
         email: dto.email,
-        phone: dto.phone,
+        telefone: dto.phone,
         creci: dto.creci,
-        passwordHash,
-        type: UserType.broker,
-        subscriptionActive: dto.subscriptionActive ?? true,
+        senhahash: passwordHash,
+        tipo: tipousuario.broker,
+        ativoassinatura: dto.subscriptionActive ?? true,
       },
     });
     return this.buildAuthResponse(user);
@@ -84,7 +92,7 @@ export class AuthService {
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
     await this.prisma.usuario.update({
       where: { id: user.id },
-      data: { resetPasswordToken: token, resetPasswordExpires: expires },
+      data: { tokenresetarsenha: token, expiraresetarsenha: expires },
     });
     // TODO: enviar e-mail com link usando serviço de e-mail (Resend, SendGrid, etc.)
     // await this.mailService.sendResetPassword(user.email, token);
@@ -92,30 +100,30 @@ export class AuthService {
 
   private buildAuthResponse(user: {
     id: string;
-    name: string;
+    nome: string;
     email: string;
-    phone: string;
+    telefone: string;
     cpf: string | null;
     creci: string | null;
-    subscriptionActive: boolean | null;
+    ativoassinatura: boolean | null;
     avatar: string | null;
-    type: UserType;
+    tipo: tipousuario;
   }): AuthResponse {
     const token = this.jwt.sign(
-      { sub: user.id, email: user.email, type: user.type },
+      { sub: user.id, email: user.email, type: user.tipo },
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
     );
     return {
       user: {
         id: user.id,
-        name: user.name,
+        name: user.nome,
         email: user.email,
-        phone: user.phone,
+        phone: user.telefone,
         cpf: user.cpf,
-        type: user.type as 'client' | 'broker',
+        type: user.tipo as 'client' | 'broker',
         avatar: user.avatar,
         creci: user.creci,
-        subscriptionActive: user.subscriptionActive,
+        subscriptionActive: user.ativoassinatura,
       },
       token,
     };

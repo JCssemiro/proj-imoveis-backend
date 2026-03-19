@@ -26,15 +26,25 @@ const tiposCasa = [
   { codigo: 'indiferente', label: 'Indiferente', ordem: 5 },
 ];
 
-const compraOuAluguel = [
-  { codigo: 'compra', label: 'Compra', ordem: 1 },
-  { codigo: 'aluguel', label: 'Aluguel', ordem: 2 },
-];
-
 const mobilias = [
   { codigo: 'mobiliado', label: 'Mobiliado', ordem: 1 },
-  { codigo: 'nao_mobiliado', label: 'Não mobiliado', ordem: 2 },
+  { codigo: 'naomobiliado', label: 'Não mobiliado', ordem: 2 },
   { codigo: 'indiferente', label: 'Indiferente', ordem: 3 },
+];
+
+const features = [
+  { codigo: 'piscina', label: 'Piscina', ordem: 1 },
+  { codigo: 'churrasqueira', label: 'Churrasqueira', ordem: 2 },
+  { codigo: 'academia', label: 'Academia', ordem: 3 },
+  { codigo: 'areaverde', label: 'Área verde', ordem: 4 },
+  { codigo: 'garagem', label: 'Garagem', ordem: 5 },
+  { codigo: 'seguranca', label: 'Segurança 24h', ordem: 6 },
+];
+
+const planos = [
+  { codigo: 'basico', label: 'Básico', ordem: 1 },
+  { codigo: 'profissional', label: 'Profissional', ordem: 2 },
+  { codigo: 'premium', label: 'Premium', ordem: 3 },
 ];
 
 async function seedParametros() {
@@ -59,13 +69,6 @@ async function seedParametros() {
       create: t,
     });
   }
-  for (const c of compraOuAluguel) {
-    await prisma.compraoualuguel.upsert({
-      where: { codigo: c.codigo },
-      update: { label: c.label, ordem: c.ordem },
-      create: c,
-    });
-  }
   for (const m of mobilias) {
     await prisma.mobilia.upsert({
       where: { codigo: m.codigo },
@@ -73,23 +76,43 @@ async function seedParametros() {
       create: m,
     });
   }
-  console.log('Seed: parâmetros (finalidade, tipoimovel, tipocasa, compraoualuguel, mobilia) criados/atualizados.');
+  for (const f of features) {
+    await prisma.feature.upsert({
+      where: { codigo: f.codigo },
+      update: { label: f.label, ordem: f.ordem },
+      create: f,
+    });
+  }
+  for (const p of planos) {
+    await prisma.plano.upsert({
+      where: { codigo: p.codigo },
+      update: { label: p.label, ordem: p.ordem },
+      create: p,
+    });
+  }
+  console.log(
+    'Seed: parâmetros (finalidade, tipoimovel, tipocasa, mobilia, feature, plano) criados/atualizados.',
+  );
 }
 
 async function main() {
   await seedParametros();
 
-  const passwordHash = await bcrypt.hash('senha123', 10);
+  const senhahash = await bcrypt.hash('senha123', 10);
+
+  const planoProfissional = await prisma.plano.findUnique({
+    where: { codigo: 'profissional' },
+  });
 
   const client = await prisma.usuario.upsert({
     where: { email: 'cliente@example.com' },
     update: {},
     create: {
-      name: 'Cliente Exemplo',
+      nome: 'Cliente Exemplo',
       email: 'cliente@example.com',
-      phone: '11999999999',
-      passwordHash,
-      type: 'client',
+      telefone: '11999999999',
+      senhahash,
+      tipo: 'client',
       cpf: '12345678900',
     },
   });
@@ -98,17 +121,21 @@ async function main() {
     where: { email: 'corretor@example.com' },
     update: {},
     create: {
-      name: 'Corretor Exemplo',
+      nome: 'Corretor Exemplo',
       email: 'corretor@example.com',
-      phone: '11888888888',
-      passwordHash,
-      type: 'broker',
+      telefone: '11888888888',
+      senhahash,
+      tipo: 'broker',
       creci: 'CRECI-12345',
-      subscriptionActive: true,
+      planoid: planoProfissional?.id ?? undefined,
+      ativoassinatura: true,
     },
   });
 
-  console.log('Seed: cliente e corretor criados', { client: client.email, broker: broker.email });
+  console.log('Seed: cliente e corretor criados', {
+    client: client.email,
+    broker: broker.email,
+  });
 }
 
 main()

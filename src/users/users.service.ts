@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -25,14 +25,55 @@ export class UsersService {
         throw new ConflictException('E-mail já está em uso por outra conta');
       }
     }
+
+    // Valida unicidade de CPF/CRECI antes do update (campos são nullable).
+    if (dto.cpf !== undefined && user.tipo === 'client') {
+      const existingCpf = await this.prisma.usuario.findFirst({
+        where: { cpf: dto.cpf, id: { not: userId } },
+      });
+      if (existingCpf) {
+        throw new ConflictException('CPF já está em uso por outra conta');
+      }
+    }
+    if (dto.creci !== undefined && user.tipo === 'broker') {
+      const existingCreci = await this.prisma.usuario.findFirst({
+        where: { creci: dto.creci, id: { not: userId } },
+      });
+      if (existingCreci) {
+        throw new ConflictException('CRECI já está em uso por outra conta');
+      }
+    }
+
     const updated = await this.prisma.usuario.update({
       where: { id: userId },
       data: {
-        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.name !== undefined && { nome: dto.name }),
         ...(dto.email !== undefined && { email: dto.email }),
-        ...(dto.phone !== undefined && { phone: dto.phone }),
-        ...(dto.cpf !== undefined && user.type === 'client' && { cpf: dto.cpf }),
-        ...(dto.creci !== undefined && user.type === 'broker' && { creci: dto.creci }),
+        ...(dto.phone !== undefined && { telefone: dto.phone }),
+        ...(dto.cpf !== undefined && user.tipo === 'client' && { cpf: dto.cpf }),
+        ...(dto.creci !== undefined && user.tipo === 'broker' && { creci: dto.creci }),
+      },
+    });
+    return this.toUserResponse(updated);
+  }
+
+  async changeBrokerPlan(brokerId: string, planoId: string) {
+    const user = await this.prisma.usuario.findUnique({ where: { id: brokerId } });
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+    if (user.tipo !== 'broker') throw new ForbiddenException('Apenas corretores podem alterar o plano');
+
+    const plan = await this.prisma.plano.findFirst({
+      where: { id: planoId, ativo: true },
+    });
+    if (!plan) {
+      throw new BadRequestException('planoId inválido ou inativo. Use um ID retornado por GET /parametros/plano.');
+    }
+
+    const updated = await this.prisma.usuario.update({
+      where: { id: brokerId },
+      data: {
+        planoid: planoId,
+        ativoassinatura: true,
       },
     });
     return this.toUserResponse(updated);
@@ -40,25 +81,25 @@ export class UsersService {
 
   private toUserResponse(user: {
     id: string;
-    name: string;
+    nome: string;
     email: string;
-    phone: string;
+    telefone: string;
     cpf: string | null;
-    type: string;
+    tipo: string;
     avatar: string | null;
     creci: string | null;
-    subscriptionActive: boolean | null;
+    ativoassinatura: boolean | null;
   }) {
     return {
       id: user.id,
-      name: user.name,
+      name: user.nome,
       email: user.email,
-      phone: user.phone,
+      phone: user.telefone,
       cpf: user.cpf,
-      type: user.type,
+      type: user.tipo,
       avatar: user.avatar,
       creci: user.creci,
-      subscriptionActive: user.subscriptionActive,
+      subscriptionActive: user.ativoassinatura,
     };
   }
 }
