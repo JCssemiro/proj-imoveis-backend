@@ -16,7 +16,6 @@ export interface AuthResponse {
     name: string;
     email: string;
     phone: string;
-    cpf: string | null;
     type: 'client' | 'broker';
     avatar: string | null;
     creci: string | null;
@@ -46,16 +45,12 @@ export class AuthService {
     const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('E-mail já cadastrado');
 
-    const existingCpf = await this.prisma.usuario.findFirst({ where: { cpf: dto.cpf } });
-    if (existingCpf) throw new ConflictException('CPF já cadastrado');
-
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     const user = await this.prisma.usuario.create({
       data: {
         nome: dto.name,
         email: dto.email,
         telefone: dto.phone,
-        cpf: dto.cpf,
         senhahash: passwordHash,
         tipo: tipousuario.client,
       },
@@ -103,7 +98,6 @@ export class AuthService {
     nome: string;
     email: string;
     telefone: string;
-    cpf: string | null;
     creci: string | null;
     ativoassinatura: boolean | null;
     avatar: string | null;
@@ -119,7 +113,6 @@ export class AuthService {
         name: user.nome,
         email: user.email,
         phone: user.telefone,
-        cpf: user.cpf,
         type: user.tipo as 'client' | 'broker',
         avatar: user.avatar,
         creci: user.creci,

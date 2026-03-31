@@ -12,13 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LeadsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const pagination_query_dto_1 = require("../common/dto/pagination-query.dto");
+const paginated_response_dto_1 = require("../common/dto/paginated-response.dto");
 const interestInclude = {
     client: true,
-    compraOuAluguel: true,
     finalidade: true,
-    tipoImovel: true,
-    tipoCasa: true,
+    tipoimovel: true,
+    tipocasa: true,
     mobilia: true,
+    localizacoes: true,
+    features: { include: { feature: true } },
 };
 let LeadsService = class LeadsService {
     constructor(prisma) {
@@ -27,80 +30,120 @@ let LeadsService = class LeadsService {
     toPropertyInterest(row) {
         const label = (r) => r?.label ?? r?.codigo ?? '';
         const num = (n) => (n != null ? String(n) : '');
+        const localizacoesResposta = row.localizacoes.map((loc) => loc.bairro || loc.cep || loc.municipiocodibge || '').filter(Boolean);
+        const featuresResposta = row.features.map((f) => f.feature.label ?? f.feature.codigo);
         return {
             id: row.id,
-            clientId: row.clientId,
-            clientName: row.client.name,
-            clientPhone: row.client.phone,
+            clientId: row.clientid,
+            clientName: row.client.nome,
+            clientPhone: row.client.telefone,
             clientEmail: row.client.email,
-            locations: row.locations,
-            compraOuAluguel: label(row.compraOuAluguel),
+            locations: localizacoesResposta,
+            compraOuAluguel: row.compraoualuguel,
             finalidade: label(row.finalidade),
-            tipoImovel: label(row.tipoImovel),
-            tipoCasa: label(row.tipoCasa),
+            tipoImovel: label(row.tipoimovel),
+            tipoCasa: label(row.tipocasa),
             quartos: num(row.quartos),
             suites: num(row.suites),
-            metragemTerreno: num(row.metragemTerreno),
-            areaConstruida: num(row.areaConstruida),
+            metragemTerreno: num(row.metragemterreno),
+            areaConstruida: num(row.areaconstruida),
             mobilia: label(row.mobilia),
-            minPrice: row.minPrice,
-            maxPrice: row.maxPrice,
-            features: row.features,
-            notes: row.notes,
-            createdAt: row.createdAt.toISOString(),
-            isActive: row.isActive,
+            minPrice: row.minprice,
+            maxPrice: row.maxprice,
+            features: featuresResposta,
+            notes: row.observacoes,
+            createdAt: row.criadoem.toISOString(),
+            isActive: row.ativo,
         };
     }
-    async findAll(brokerId, filters) {
-        const leads = await this.prisma.prospecto.findMany({
-            where: {
-                ...(filters.status && { status: filters.status }),
-                interest: {
-                    ...(filters.tipoImovel && { tipoImovel: { codigo: filters.tipoImovel } }),
-                    ...(filters.regiao && { locations: { has: filters.regiao } }),
-                    ...(filters.maxPrice !== undefined && filters.maxPrice !== null && {
-                        maxPrice: { lte: filters.maxPrice },
-                    }),
+    async findAll(brokerId, filters, pagination) {
+        const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
+        const interesseWhere = {};
+        if (filters.tipoImovelId)
+            interesseWhere.tipoimovelid = filters.tipoImovelId;
+        if (filters.finalidadeId)
+            interesseWhere.finalidadeid = filters.finalidadeId;
+        if (filters.tipoCasaId)
+            interesseWhere.tipocasaid = filters.tipoCasaId;
+        if (filters.mobiliaId)
+            interesseWhere.mobiliaid = filters.mobiliaId;
+        if (filters.compraOuAluguel === 'compra' || filters.compraOuAluguel === 'aluguel') {
+            interesseWhere.compraoualuguel = filters.compraOuAluguel;
+        }
+        if (filters.regiao) {
+            interesseWhere.localizacoes = {
+                some: {
+                    OR: [
+                        { cep: filters.regiao },
+                        { bairro: filters.regiao },
+                        { municipiocodibge: filters.regiao },
+                    ],
                 },
-            },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                interest: { include: interestInclude },
-                broker: true,
-            },
-        });
-        return leads.map((l) => ({
+            };
+        }
+        if (filters.minPrice !== undefined && filters.minPrice !== null) {
+            interesseWhere.minprice = { gte: filters.minPrice };
+        }
+        if (filters.maxPrice !== undefined && filters.maxPrice !== null) {
+            interesseWhere.maxprice = { lte: filters.maxPrice };
+        }
+        const prospectoWhere = {
+            ...(filters.status && { status: filters.status }),
+            ...(Object.keys(interesseWhere).length > 0 && { interesse: interesseWhere }),
+        };
+        if (filters.dataInicio || filters.dataFim) {
+            prospectoWhere.criadoem = {};
+            if (filters.dataInicio)
+                prospectoWhere.criadoem.gte = new Date(filters.dataInicio);
+            if (filters.dataFim)
+                prospectoWhere.criadoem.lte = new Date(filters.dataFim);
+        }
+        const [total, leads] = await Promise.all([
+            this.prisma.prospecto.count({ where: prospectoWhere }),
+            this.prisma.prospecto.findMany({
+                where: prospectoWhere,
+                orderBy: { criadoem: 'desc' },
+                include: {
+                    interesse: { include: interestInclude },
+                    corretor: true,
+                },
+                skip,
+                take: size,
+            }),
+        ]);
+        const conteudo = leads.map((l) => ({
             id: l.id,
-            interest: this.toPropertyInterest(l.interest),
-            brokerId: l.brokerId,
+            interest: this.toPropertyInterest(l.interesse),
+            brokerId: l.corretorid,
             status: l.status,
-            createdAt: l.createdAt.toISOString(),
+            createdAt: l.criadoem.toISOString(),
         }));
+        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, conteudo);
     }
     async findOne(id) {
         const lead = await this.prisma.prospecto.findUnique({
             where: { id },
             include: {
-                interest: { include: interestInclude },
-                broker: true,
+                interesse: { include: interestInclude },
+                corretor: true,
             },
         });
         if (!lead)
             throw new common_1.NotFoundException('Lead não encontrado');
         return {
             id: lead.id,
-            interest: this.toPropertyInterest(lead.interest),
-            brokerId: lead.brokerId,
+            interest: this.toPropertyInterest(lead.interesse),
+            brokerId: lead.corretorid,
             status: lead.status,
-            createdAt: lead.createdAt.toISOString(),
+            createdAt: lead.criadoem.toISOString(),
         };
     }
     async update(id, dto, currentBrokerId) {
         const lead = await this.prisma.prospecto.findUnique({
             where: { id },
             include: {
-                interest: { include: interestInclude },
-                broker: true,
+                interesse: { include: interestInclude },
+                corretor: true,
             },
         });
         if (!lead)
@@ -112,19 +155,19 @@ let LeadsService = class LeadsService {
             where: { id },
             data: {
                 ...(dto.status !== undefined && { status: dto.status }),
-                ...(dto.brokerId !== undefined && { brokerId: dto.brokerId }),
+                ...(dto.brokerId !== undefined && { corretorid: dto.brokerId }),
             },
             include: {
-                interest: { include: interestInclude },
-                broker: true,
+                interesse: { include: interestInclude },
+                corretor: true,
             },
         });
         return {
             id: updated.id,
-            interest: this.toPropertyInterest(updated.interest),
-            brokerId: updated.brokerId,
+            interest: this.toPropertyInterest(updated.interesse),
+            brokerId: updated.corretorid,
             status: updated.status,
-            createdAt: updated.createdAt.toISOString(),
+            createdAt: updated.criadoem.toISOString(),
         };
     }
 };

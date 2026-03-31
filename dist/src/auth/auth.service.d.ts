@@ -9,7 +9,6 @@ export interface AuthResponse {
         name: string;
         email: string;
         phone: string;
-        cpf: string | null;
         type: 'client' | 'broker';
         avatar: string | null;
         creci: string | null;

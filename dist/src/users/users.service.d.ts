@@ -8,7 +8,6 @@ export declare class UsersService {
         name: string;
         email: string;
         phone: string;
-        cpf: string | null;
         type: string;
         avatar: string | null;
         creci: string | null;
@@ -19,7 +18,16 @@ export declare class UsersService {
         name: string;
         email: string;
         phone: string;
-        cpf: string | null;
+        type: string;
+        avatar: string | null;
+        creci: string | null;
+        subscriptionActive: boolean | null;
+    }>;
+    changeBrokerPlan(brokerId: string, planoId: string): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
         type: string;
         avatar: string | null;
         creci: string | null;

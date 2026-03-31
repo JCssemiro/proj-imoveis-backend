@@ -132,7 +132,6 @@ model usuario {
   telefone             String
   senhahash            String
   tipo                 tipousuario
-  cpf                  String?   @unique
   creci                String?   @unique
   planoid              String?
   plano                plano?    @relation(fields: [planoid], references: [id], onDelete: SetNull)

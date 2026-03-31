@@ -26,15 +26,6 @@ export class UsersService {
       }
     }
 
-    // Valida unicidade de CPF/CRECI antes do update (campos são nullable).
-    if (dto.cpf !== undefined && user.tipo === 'client') {
-      const existingCpf = await this.prisma.usuario.findFirst({
-        where: { cpf: dto.cpf, id: { not: userId } },
-      });
-      if (existingCpf) {
-        throw new ConflictException('CPF já está em uso por outra conta');
-      }
-    }
     if (dto.creci !== undefined && user.tipo === 'broker') {
       const existingCreci = await this.prisma.usuario.findFirst({
         where: { creci: dto.creci, id: { not: userId } },
@@ -50,7 +41,6 @@ export class UsersService {
         ...(dto.name !== undefined && { nome: dto.name }),
         ...(dto.email !== undefined && { email: dto.email }),
         ...(dto.phone !== undefined && { telefone: dto.phone }),
-        ...(dto.cpf !== undefined && user.tipo === 'client' && { cpf: dto.cpf }),
         ...(dto.creci !== undefined && user.tipo === 'broker' && { creci: dto.creci }),
       },
     });
@@ -84,7 +74,6 @@ export class UsersService {
     nome: string;
     email: string;
     telefone: string;
-    cpf: string | null;
     tipo: string;
     avatar: string | null;
     creci: string | null;
@@ -95,7 +84,6 @@ export class UsersService {
       name: user.nome,
       email: user.email,
       phone: user.telefone,
-      cpf: user.cpf,
       type: user.tipo,
       avatar: user.avatar,
       creci: user.creci,

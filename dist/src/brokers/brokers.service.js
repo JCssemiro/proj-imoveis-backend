@@ -12,28 +12,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BrokersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const pagination_query_dto_1 = require("../common/dto/pagination-query.dto");
+const paginated_response_dto_1 = require("../common/dto/paginated-response.dto");
 let BrokersService = class BrokersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll() {
-        const brokers = await this.prisma.usuario.findMany({
-            where: { type: 'broker' },
-            include: {
-                _count: { select: { leadsAsBroker: true } },
-            },
-        });
-        return brokers.map((b) => ({
+    async findAll(pagination) {
+        const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
+        const where = { tipo: 'broker' };
+        const [total, brokers] = await Promise.all([
+            this.prisma.usuario.count({ where }),
+            this.prisma.usuario.findMany({
+                where,
+                orderBy: { nome: 'asc' },
+                include: {
+                    _count: { select: { leadsAsBroker: true } },
+                },
+                skip,
+                take: size,
+            }),
+        ]);
+        const conteudo = brokers.map((b) => ({
             id: b.id,
-            name: b.name,
+            name: b.nome,
             email: b.email,
-            phone: b.phone,
+            phone: b.telefone,
             creci: b.creci ?? '',
             avatar: b.avatar,
             specialties: [],
             rating: 0,
             totalLeads: b._count.leadsAsBroker,
         }));
+        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, conteudo);
     }
 };
 exports.BrokersService = BrokersService;

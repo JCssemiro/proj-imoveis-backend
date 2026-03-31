@@ -4,14 +4,18 @@ import { UpdateInterestDto } from './dto/update-interest.dto';
 export declare class InterestsController {
     private interests;
     constructor(interests: InterestsService);
-    findAll(clientId: string, isActive?: string): Promise<{
+    findAll(clientId: string, isActive?: string, pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         clientId: string;
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -23,18 +27,22 @@ export declare class InterestsController {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
-    }[]>;
+    }>>;
     findOne(id: string, clientId: string): Promise<{
         id: string;
         clientId: string;
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -46,7 +54,7 @@ export declare class InterestsController {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
     }>;
@@ -56,8 +64,12 @@ export declare class InterestsController {
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -69,7 +81,7 @@ export declare class InterestsController {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
     }>;
@@ -79,8 +91,12 @@ export declare class InterestsController {
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -92,7 +108,7 @@ export declare class InterestsController {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
     }>;

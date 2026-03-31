@@ -3,7 +3,7 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 export declare class LeadsController {
     private leads;
     constructor(leads: LeadsService);
-    findAll(_brokerId: string, status?: string, tipoImovel?: string, regiao?: string, maxPrice?: string): Promise<{
+    findAll(_brokerId: string, pagina?: string, tamanho?: string, status?: string, tipoImovelId?: string, finalidadeId?: string, tipoCasaId?: string, mobiliaId?: string, compraOuAluguel?: string, regiao?: string, minPrice?: string, maxPrice?: string, dataInicio?: string, dataFim?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         interest: {
             id: string;
@@ -29,9 +29,9 @@ export declare class LeadsController {
             isActive: boolean;
         };
         brokerId: string | null;
-        status: import(".prisma/client").$Enums.LeadStatus;
+        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
-    }[]>;
+    }>>;
     findOne(id: string): Promise<{
         id: string;
         interest: {
@@ -58,7 +58,7 @@ export declare class LeadsController {
             isActive: boolean;
         };
         brokerId: string | null;
-        status: import(".prisma/client").$Enums.LeadStatus;
+        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>;
     update(id: string, dto: UpdateLeadDto, brokerId: string): Promise<{
@@ -87,7 +87,7 @@ export declare class LeadsController {
             isActive: boolean;
         };
         brokerId: string | null;
-        status: import(".prisma/client").$Enums.LeadStatus;
+        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>;
 }

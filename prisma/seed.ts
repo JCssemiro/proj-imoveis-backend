@@ -113,7 +113,6 @@ async function main() {
       telefone: '11999999999',
       senhahash,
       tipo: 'client',
-      cpf: '12345678900',
     },
   });
 

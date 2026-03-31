@@ -25,9 +25,9 @@ let InterestsController = class InterestsController {
     constructor(interests) {
         this.interests = interests;
     }
-    findAll(clientId, isActive) {
+    findAll(clientId, isActive, pagina, tamanho) {
         const active = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-        return this.interests.findAll(clientId, active);
+        return this.interests.findAll(clientId, active, { pagina, tamanho });
     }
     findOne(id, clientId) {
         return this.interests.findOne(id, clientId);
@@ -45,12 +45,16 @@ let InterestsController = class InterestsController {
 exports.InterestsController = InterestsController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Listar interesses do cliente' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Listar interesses do cliente (paginado)' }),
     (0, swagger_1.ApiQuery)({ name: 'isActive', required: false, description: 'Filtrar por ativo (true/false)' }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __param(1, (0, common_1.Query)('isActive')),
+    __param(2, (0, common_1.Query)('pagina')),
+    __param(3, (0, common_1.Query)('tamanho')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], InterestsController.prototype, "findAll", null);
 __decorate([
@@ -64,7 +68,10 @@ __decorate([
 ], InterestsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Criar interesse de imóvel' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Criar interesse de imóvel',
+        description: 'Envie IDs (UUID) retornados por GET /parametros: finalidadeId, tipoImovelId, tipoCasaId (opcional), mobiliaId (opcional), featureIds (array). compraOuAluguel: "compra" ou "aluguel".',
+    }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

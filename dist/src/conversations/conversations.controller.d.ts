@@ -5,7 +5,7 @@ import { JwtPayload } from '../common/decorators/current-user.decorator';
 export declare class ConversationsController {
     private conversations;
     constructor(conversations: ConversationsService);
-    findAll(user: JwtPayload): Promise<{
+    findAll(user: JwtPayload, pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         clientId: string;
         clientName: string;
@@ -18,7 +18,7 @@ export declare class ConversationsController {
         messages: {
             id: string;
             senderId: string;
-            senderType: import(".prisma/client").$Enums.SenderType;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
             content: string;
             imageUrl: string | null;
             createdAt: string;
@@ -26,13 +26,13 @@ export declare class ConversationsController {
         lastMessage: {
             id: string;
             senderId: string;
-            senderType: import(".prisma/client").$Enums.SenderType;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
             content: string;
             imageUrl: string | null;
             createdAt: string;
         } | null;
         updatedAt: string;
-    }[]>;
+    }>>;
     findOne(id: string, user: JwtPayload): Promise<{
         id: string;
         clientId: string;
@@ -46,7 +46,7 @@ export declare class ConversationsController {
         messages: {
             id: string;
             senderId: string;
-            senderType: import(".prisma/client").$Enums.SenderType;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
             content: string;
             imageUrl: string | null;
             createdAt: string;
@@ -54,7 +54,7 @@ export declare class ConversationsController {
         lastMessage: {
             id: string;
             senderId: string;
-            senderType: import(".prisma/client").$Enums.SenderType;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
             content: string;
             imageUrl: string | null;
             createdAt: string;
@@ -74,7 +74,7 @@ export declare class ConversationsController {
         messages: {
             id: string;
             senderId: string;
-            senderType: import(".prisma/client").$Enums.SenderType;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
             content: string;
             imageUrl: string | null;
             createdAt: string;
@@ -82,7 +82,7 @@ export declare class ConversationsController {
         lastMessage: {
             id: string;
             senderId: string;
-            senderType: import(".prisma/client").$Enums.SenderType;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
             content: string;
             imageUrl: string | null;
             createdAt: string;
@@ -92,9 +92,37 @@ export declare class ConversationsController {
     createMessage(id: string, user: JwtPayload, dto: CreateMessageDto): Promise<{
         id: string;
         senderId: string;
-        senderType: import(".prisma/client").$Enums.SenderType;
+        senderType: import(".prisma/client").$Enums.tiporemetente;
         content: string;
         imageUrl: string | null;
         createdAt: string;
+    }>;
+    encerrar(id: string, clientId: string): Promise<{
+        id: string;
+        clientId: string;
+        clientName: string;
+        clientAvatar: string | null;
+        brokerId: string;
+        brokerName: string;
+        brokerAvatar: string | null;
+        leadId: string;
+        propertyInterest: string;
+        messages: {
+            id: string;
+            senderId: string;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
+            content: string;
+            imageUrl: string | null;
+            createdAt: string;
+        }[];
+        lastMessage: {
+            id: string;
+            senderId: string;
+            senderType: import(".prisma/client").$Enums.tiporemetente;
+            content: string;
+            imageUrl: string | null;
+            createdAt: string;
+        } | null;
+        updatedAt: string;
     }>;
 }

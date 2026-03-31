@@ -33,12 +33,6 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterClientDto.prototype, "phone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(1, { message: 'CPF é obrigatório' }),
-    __metadata("design:type", String)
-], RegisterClientDto.prototype, "cpf", void 0);
-__decorate([
     (0, swagger_1.ApiProperty)({ minLength: 6 }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),

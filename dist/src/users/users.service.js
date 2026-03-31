@@ -36,14 +36,42 @@ let UsersService = class UsersService {
                 throw new common_1.ConflictException('E-mail já está em uso por outra conta');
             }
         }
+        if (dto.creci !== undefined && user.tipo === 'broker') {
+            const existingCreci = await this.prisma.usuario.findFirst({
+                where: { creci: dto.creci, id: { not: userId } },
+            });
+            if (existingCreci) {
+                throw new common_1.ConflictException('CRECI já está em uso por outra conta');
+            }
+        }
         const updated = await this.prisma.usuario.update({
             where: { id: userId },
             data: {
-                ...(dto.name !== undefined && { name: dto.name }),
+                ...(dto.name !== undefined && { nome: dto.name }),
                 ...(dto.email !== undefined && { email: dto.email }),
-                ...(dto.phone !== undefined && { phone: dto.phone }),
-                ...(dto.cpf !== undefined && user.type === 'client' && { cpf: dto.cpf }),
-                ...(dto.creci !== undefined && user.type === 'broker' && { creci: dto.creci }),
+                ...(dto.phone !== undefined && { telefone: dto.phone }),
+                ...(dto.creci !== undefined && user.tipo === 'broker' && { creci: dto.creci }),
+            },
+        });
+        return this.toUserResponse(updated);
+    }
+    async changeBrokerPlan(brokerId, planoId) {
+        const user = await this.prisma.usuario.findUnique({ where: { id: brokerId } });
+        if (!user)
+            throw new common_1.NotFoundException('Usuário não encontrado');
+        if (user.tipo !== 'broker')
+            throw new common_1.ForbiddenException('Apenas corretores podem alterar o plano');
+        const plan = await this.prisma.plano.findFirst({
+            where: { id: planoId, ativo: true },
+        });
+        if (!plan) {
+            throw new common_1.BadRequestException('planoId inválido ou inativo. Use um ID retornado por GET /parametros/plano.');
+        }
+        const updated = await this.prisma.usuario.update({
+            where: { id: brokerId },
+            data: {
+                planoid: planoId,
+                ativoassinatura: true,
             },
         });
         return this.toUserResponse(updated);
@@ -51,14 +79,13 @@ let UsersService = class UsersService {
     toUserResponse(user) {
         return {
             id: user.id,
-            name: user.name,
+            name: user.nome,
             email: user.email,
-            phone: user.phone,
-            cpf: user.cpf,
-            type: user.type,
+            phone: user.telefone,
+            type: user.tipo,
             avatar: user.avatar,
             creci: user.creci,
-            subscriptionActive: user.subscriptionActive,
+            subscriptionActive: user.ativoassinatura,
         };
     }
 };

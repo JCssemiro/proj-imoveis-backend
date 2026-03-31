@@ -24,10 +24,10 @@ let AuthService = class AuthService {
     }
     async login(dto) {
         const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
-        if (!user || user.type !== dto.type) {
+        if (!user || user.tipo !== dto.type) {
             throw new common_1.UnauthorizedException('E-mail ou senha inválidos');
         }
-        const valid = await bcrypt.compare(dto.password, user.passwordHash);
+        const valid = await bcrypt.compare(dto.password, user.senhahash);
         if (!valid)
             throw new common_1.UnauthorizedException('E-mail ou senha inválidos');
         return this.buildAuthResponse(user);
@@ -39,12 +39,11 @@ let AuthService = class AuthService {
         const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
         const user = await this.prisma.usuario.create({
             data: {
-                name: dto.name,
+                nome: dto.name,
                 email: dto.email,
-                phone: dto.phone,
-                cpf: dto.cpf,
-                passwordHash,
-                type: client_1.UserType.client,
+                telefone: dto.phone,
+                senhahash: passwordHash,
+                tipo: client_1.tipousuario.client,
             },
         });
         return this.buildAuthResponse(user);
@@ -53,16 +52,19 @@ let AuthService = class AuthService {
         const existing = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
         if (existing)
             throw new common_1.ConflictException('E-mail já cadastrado');
+        const existingCreci = await this.prisma.usuario.findFirst({ where: { creci: dto.creci } });
+        if (existingCreci)
+            throw new common_1.ConflictException('CRECI já cadastrado');
         const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
         const user = await this.prisma.usuario.create({
             data: {
-                name: dto.name,
+                nome: dto.name,
                 email: dto.email,
-                phone: dto.phone,
+                telefone: dto.phone,
                 creci: dto.creci,
-                passwordHash,
-                type: client_1.UserType.broker,
-                subscriptionActive: dto.subscriptionActive ?? true,
+                senhahash: passwordHash,
+                tipo: client_1.tipousuario.broker,
+                ativoassinatura: dto.subscriptionActive ?? true,
             },
         });
         return this.buildAuthResponse(user);
@@ -75,22 +77,21 @@ let AuthService = class AuthService {
         const expires = new Date(Date.now() + 60 * 60 * 1000);
         await this.prisma.usuario.update({
             where: { id: user.id },
-            data: { resetPasswordToken: token, resetPasswordExpires: expires },
+            data: { tokenresetarsenha: token, expiraresetarsenha: expires },
         });
     }
     buildAuthResponse(user) {
-        const token = this.jwt.sign({ sub: user.id, email: user.email, type: user.type }, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+        const token = this.jwt.sign({ sub: user.id, email: user.email, type: user.tipo }, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
         return {
             user: {
                 id: user.id,
-                name: user.name,
+                name: user.nome,
                 email: user.email,
-                phone: user.phone,
-                cpf: user.cpf,
-                type: user.type,
+                phone: user.telefone,
+                type: user.tipo,
                 avatar: user.avatar,
                 creci: user.creci,
-                subscriptionActive: user.subscriptionActive,
+                subscriptionActive: user.ativoassinatura,
             },
             token,
         };

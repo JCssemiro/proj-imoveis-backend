@@ -16,11 +16,6 @@ export class RegisterClientDto {
   @MinLength(1, { message: 'Telefone é obrigatório' })
   phone: string;
 
-  @ApiProperty()
-  @IsString()
-  @MinLength(1, { message: 'CPF é obrigatório' })
-  cpf: string;
-
   @ApiProperty({ minLength: 6 })
   @IsString()
   @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres' })

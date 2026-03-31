@@ -107,7 +107,6 @@ Representa usuários da plataforma (clientes e corretores).
 | **phone** | TEXT | Sim | Contato; TEXT por formatos variados (DDI, etc.). |
 | **passwordHash** | TEXT | Sim | Hash da senha (ex.: bcrypt); nunca armazenar senha em texto puro. |
 | **type** | UserType | Sim | Papel: client ou broker; base para autorização. |
-| **cpf** | TEXT | Não | Documento do cliente; nullable para corretores. |
 | **creci** | TEXT | Não | Registro profissional do corretor; nullable para clientes. |
 | **subscriptionActive** | BOOLEAN | Não | Assinatura ativa do corretor; nullable quando não aplicável. |
 | **avatar** | TEXT | Não | URL do avatar em storage externo. |

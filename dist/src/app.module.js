@@ -22,6 +22,7 @@ const interests_module_1 = require("./interests/interests.module");
 const leads_module_1 = require("./leads/leads.module");
 const conversations_module_1 = require("./conversations/conversations.module");
 const brokers_module_1 = require("./brokers/brokers.module");
+const parametros_module_1 = require("./parametros/parametros.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -46,6 +47,7 @@ exports.AppModule = AppModule = __decorate([
             leads_module_1.LeadsModule,
             conversations_module_1.ConversationsModule,
             brokers_module_1.BrokersModule,
+            parametros_module_1.ParametrosModule,
         ],
     })
 ], AppModule);

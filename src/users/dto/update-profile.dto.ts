@@ -22,10 +22,5 @@ export class UpdateProfileDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  cpf?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
   creci?: string;
 }

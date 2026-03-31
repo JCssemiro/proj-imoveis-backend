@@ -2,7 +2,7 @@ import { BrokersService } from './brokers.service';
 export declare class BrokersController {
     private brokers;
     constructor(brokers: BrokersService);
-    findAll(): Promise<{
+    findAll(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         name: string;
         email: string;
@@ -12,5 +12,5 @@ export declare class BrokersController {
         specialties: string[];
         rating: number;
         totalLeads: number;
-    }[]>;
+    }>>;
 }

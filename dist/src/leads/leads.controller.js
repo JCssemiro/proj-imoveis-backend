@@ -24,13 +24,20 @@ let LeadsController = class LeadsController {
     constructor(leads) {
         this.leads = leads;
     }
-    findAll(_brokerId, status, tipoImovel, regiao, maxPrice) {
+    findAll(_brokerId, pagina, tamanho, status, tipoImovelId, finalidadeId, tipoCasaId, mobiliaId, compraOuAluguel, regiao, minPrice, maxPrice, dataInicio, dataFim) {
         return this.leads.findAll(_brokerId, {
             status,
-            tipoImovel,
+            tipoImovelId,
+            finalidadeId,
+            tipoCasaId,
+            mobiliaId,
+            compraOuAluguel,
             regiao,
+            minPrice: minPrice ? parseInt(minPrice, 10) : undefined,
             maxPrice: maxPrice ? parseInt(maxPrice, 10) : undefined,
-        });
+            dataInicio,
+            dataFim,
+        }, { pagina, tamanho });
     }
     findOne(id) {
         return this.leads.findOne(id);
@@ -42,18 +49,39 @@ let LeadsController = class LeadsController {
 exports.LeadsController = LeadsController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Listar leads do corretor' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Listar leads do corretor (paginado)',
+        description: 'Filtros por interesse e data. Use IDs de GET /parametros para tipoImovelId, finalidadeId, tipoCasaId, mobiliaId. status: new | contacted | in_progress | closed. dataInicio/dataFim: ISO 8601.',
+    }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
-    (0, swagger_1.ApiQuery)({ name: 'tipoImovel', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tipoImovelId', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'finalidadeId', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tipoCasaId', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'mobiliaId', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'compraOuAluguel', required: false, enum: ['compra', 'aluguel'] }),
     (0, swagger_1.ApiQuery)({ name: 'regiao', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'minPrice', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'maxPrice', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'dataInicio', required: false, description: 'Data mínima criação do lead (ISO 8601)' }),
+    (0, swagger_1.ApiQuery)({ name: 'dataFim', required: false, description: 'Data máxima criação do lead (ISO 8601)' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
-    __param(1, (0, common_1.Query)('status')),
-    __param(2, (0, common_1.Query)('tipoImovel')),
-    __param(3, (0, common_1.Query)('regiao')),
-    __param(4, (0, common_1.Query)('maxPrice')),
+    __param(1, (0, common_1.Query)('pagina')),
+    __param(2, (0, common_1.Query)('tamanho')),
+    __param(3, (0, common_1.Query)('status')),
+    __param(4, (0, common_1.Query)('tipoImovelId')),
+    __param(5, (0, common_1.Query)('finalidadeId')),
+    __param(6, (0, common_1.Query)('tipoCasaId')),
+    __param(7, (0, common_1.Query)('mobiliaId')),
+    __param(8, (0, common_1.Query)('compraOuAluguel')),
+    __param(9, (0, common_1.Query)('regiao')),
+    __param(10, (0, common_1.Query)('minPrice')),
+    __param(11, (0, common_1.Query)('maxPrice')),
+    __param(12, (0, common_1.Query)('dataInicio')),
+    __param(13, (0, common_1.Query)('dataFim')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String, String, String, String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], LeadsController.prototype, "findAll", null);
 __decorate([

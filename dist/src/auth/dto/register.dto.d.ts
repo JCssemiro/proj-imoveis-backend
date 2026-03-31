@@ -2,7 +2,6 @@ export declare class RegisterClientDto {
     name: string;
     email: string;
     phone: string;
-    cpf: string;
     password: string;
     type: 'client';
 }

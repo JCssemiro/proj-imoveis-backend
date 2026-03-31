@@ -18,6 +18,9 @@ const swagger_1 = require("@nestjs/swagger");
 const users_service_1 = require("./users.service");
 const update_profile_dto_1 = require("./dto/update-profile.dto");
 const current_user_decorator_1 = require("../common/decorators/current-user.decorator");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const change_broker_plan_dto_1 = require("./dto/change-broker-plan.dto");
 let UsersController = class UsersController {
     constructor(users) {
         this.users = users;
@@ -27,6 +30,9 @@ let UsersController = class UsersController {
     }
     updateMe(userId, dto) {
         return this.users.updateMe(userId, dto);
+    }
+    changeBrokerPlan(brokerId, dto) {
+        return this.users.changeBrokerPlan(brokerId, dto.planoId);
     }
 };
 exports.UsersController = UsersController;
@@ -47,6 +53,18 @@ __decorate([
     __metadata("design:paramtypes", [String, update_profile_dto_1.UpdateProfileDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateMe", null);
+__decorate([
+    (0, common_1.Patch)('plano'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('broker'),
+    (0, swagger_1.ApiOperation)({ summary: 'Alterar plano do corretor' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, change_broker_plan_dto_1.ChangeBrokerPlanDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "changeBrokerPlan", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('Usuário'),
     (0, swagger_1.ApiBearerAuth)('access-token'),

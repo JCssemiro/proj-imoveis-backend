@@ -2,7 +2,10 @@ import { PrismaService } from '../prisma/prisma.service';
 export declare class BrokersService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(): Promise<{
+    findAll(pagination: {
+        pagina?: number | string;
+        tamanho?: number | string;
+    }): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         name: string;
         email: string;
@@ -12,5 +15,5 @@ export declare class BrokersService {
         specialties: string[];
         rating: number;
         totalLeads: number;
-    }[]>;
+    }>>;
 }

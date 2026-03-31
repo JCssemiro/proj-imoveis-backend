@@ -25,8 +25,8 @@ let ConversationsController = class ConversationsController {
     constructor(conversations) {
         this.conversations = conversations;
     }
-    findAll(user) {
-        return this.conversations.findAll(user.sub, user.type);
+    findAll(user, pagina, tamanho) {
+        return this.conversations.findAll(user.sub, user.type, { pagina, tamanho });
     }
     findOne(id, user) {
         return this.conversations.findOne(id, user);
@@ -37,14 +37,21 @@ let ConversationsController = class ConversationsController {
     createMessage(id, user, dto) {
         return this.conversations.createMessage(id, user, dto);
     }
+    encerrar(id, clientId) {
+        return this.conversations.encerrar(id, clientId);
+    }
 };
 exports.ConversationsController = ConversationsController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Listar conversas do usuário' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Listar conversas do usuário (paginado)' }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('pagina')),
+    __param(2, (0, common_1.Query)('tamanho')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", void 0)
 ], ConversationsController.prototype, "findAll", null);
 __decorate([
@@ -79,6 +86,18 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, create_message_dto_1.CreateMessageDto]),
     __metadata("design:returntype", void 0)
 ], ConversationsController.prototype, "createMessage", null);
+__decorate([
+    (0, common_1.Patch)(':id/encerrar'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('client'),
+    (0, swagger_1.ApiOperation)({ summary: 'Encerrar chat (somente cliente)' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ConversationsController.prototype, "encerrar", null);
 exports.ConversationsController = ConversationsController = __decorate([
     (0, swagger_1.ApiTags)('Conversa'),
     (0, swagger_1.ApiBearerAuth)('access-token'),

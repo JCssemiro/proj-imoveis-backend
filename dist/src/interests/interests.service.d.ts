@@ -4,14 +4,21 @@ import { UpdateInterestDto } from './dto/update-interest.dto';
 export declare class InterestsService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(clientId: string, isActive?: boolean): Promise<{
+    findAll(clientid: string, ativo: boolean | undefined, pagination: {
+        pagina?: number | string;
+        tamanho?: number | string;
+    }): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         clientId: string;
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -23,18 +30,22 @@ export declare class InterestsService {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
-    }[]>;
-    findOne(id: string, clientId: string): Promise<{
+    }>>;
+    findOne(id: string, clientid: string): Promise<{
         id: string;
         clientId: string;
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -46,41 +57,22 @@ export declare class InterestsService {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
-        createdAt: string;
-        isActive: boolean;
-    }>;
-    create(clientId: string, dto: CreateInterestDto): Promise<{
-        id: string;
-        clientId: string;
-        clientName: string;
-        clientPhone: string;
-        clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
-        finalidade: string;
-        tipoImovel: string;
-        tipoCasa: string;
-        quartos: string;
-        suites: string;
-        metragemTerreno: string;
-        areaConstruida: string;
-        mobilia: string;
-        minPrice: number;
-        maxPrice: number;
-        features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
     }>;
-    update(id: string, clientId: string, dto: UpdateInterestDto): Promise<{
+    create(clientid: string, dto: CreateInterestDto): Promise<{
         id: string;
         clientId: string;
         clientName: string;
         clientPhone: string;
         clientEmail: string;
-        locations: string[];
-        compraOuAluguel: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
         finalidade: string;
         tipoImovel: string;
         tipoCasa: string;
@@ -92,10 +84,37 @@ export declare class InterestsService {
         minPrice: number;
         maxPrice: number;
         features: string[];
-        notes: string;
+        observacoes: string;
         createdAt: string;
         isActive: boolean;
     }>;
-    remove(id: string, clientId: string): Promise<void>;
+    update(id: string, clientid: string, dto: UpdateInterestDto): Promise<{
+        id: string;
+        clientId: string;
+        clientName: string;
+        clientPhone: string;
+        clientEmail: string;
+        localizacoes: {
+            cep: string | undefined;
+            municipiocodibge: string | undefined;
+            bairro: string | undefined;
+        }[];
+        compraOuAluguel: import(".prisma/client").$Enums.compraoualuguel;
+        finalidade: string;
+        tipoImovel: string;
+        tipoCasa: string;
+        quartos: string;
+        suites: string;
+        metragemTerreno: string;
+        areaConstruida: string;
+        mobilia: string;
+        minPrice: number;
+        maxPrice: number;
+        features: string[];
+        observacoes: string;
+        createdAt: string;
+        isActive: boolean;
+    }>;
+    remove(id: string, clientid: string): Promise<void>;
     private toPropertyInterest;
 }

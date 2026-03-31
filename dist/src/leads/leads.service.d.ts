@@ -6,10 +6,20 @@ export declare class LeadsService {
     private toPropertyInterest;
     findAll(brokerId: string, filters: {
         status?: string;
-        tipoImovel?: string;
+        tipoImovelId?: string;
+        finalidadeId?: string;
+        tipoCasaId?: string;
+        mobiliaId?: string;
+        compraOuAluguel?: string;
         regiao?: string;
+        minPrice?: number;
         maxPrice?: number;
-    }): Promise<{
+        dataInicio?: string;
+        dataFim?: string;
+    }, pagination: {
+        pagina?: number | string;
+        tamanho?: number | string;
+    }): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         interest: {
             id: string;
@@ -35,9 +45,9 @@ export declare class LeadsService {
             isActive: boolean;
         };
         brokerId: string | null;
-        status: import(".prisma/client").$Enums.LeadStatus;
+        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
-    }[]>;
+    }>>;
     findOne(id: string): Promise<{
         id: string;
         interest: {
@@ -64,7 +74,7 @@ export declare class LeadsService {
             isActive: boolean;
         };
         brokerId: string | null;
-        status: import(".prisma/client").$Enums.LeadStatus;
+        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>;
     update(id: string, dto: UpdateLeadDto, currentBrokerId: string): Promise<{
@@ -93,7 +103,7 @@ export declare class LeadsService {
             isActive: boolean;
         };
         brokerId: string | null;
-        status: import(".prisma/client").$Enums.LeadStatus;
+        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>;
 }
