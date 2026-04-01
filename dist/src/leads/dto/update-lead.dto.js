@@ -12,19 +12,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateLeadDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class UpdateLeadDto {
 }
 exports.UpdateLeadDto = UpdateLeadDto;
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ enum: ['new', 'contacted', 'in_progress', 'closed'] }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Status numérico: 1=novo, 2=contatado, 3=em andamento, 4=encerrado',
+        minimum: 1,
+        maximum: 4,
+        example: 2,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(['new', 'contacted', 'in_progress', 'closed']),
-    __metadata("design:type", String)
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(4),
+    __metadata("design:type", Number)
 ], UpdateLeadDto.prototype, "status", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ nullable: true }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", Object)
-], UpdateLeadDto.prototype, "brokerId", void 0);
 //# sourceMappingURL=update-lead.dto.js.map

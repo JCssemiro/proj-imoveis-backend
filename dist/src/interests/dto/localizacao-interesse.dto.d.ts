@@ -1,5 +1,8 @@
 export declare class LocalizacaoInteresseDto {
     cep?: string;
-    municipiocodibge?: string;
+    logradouro?: string;
     bairro?: string;
+    cidade?: string;
+    uf?: string;
+    codIbgeCidade?: string;
 }

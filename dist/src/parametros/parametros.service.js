@@ -14,40 +14,32 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const pagination_query_dto_1 = require("../common/dto/pagination-query.dto");
 const paginated_response_dto_1 = require("../common/dto/paginated-response.dto");
+const decimal_1 = require("../common/utils/decimal");
 let ParametrosService = class ParametrosService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getFinalidades() {
-        const rows = await this.prisma.finalidade.findMany({
-            where: { ativo: true },
-            orderBy: { ordem: 'asc' },
-            select: { id: true, codigo: true, label: true, ordem: true },
-        });
-        return rows;
-    }
-    async getFinalidadesPaginado(pagination) {
+    async paginateParam(model, pagination) {
         const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
         const where = { ativo: true };
+        const delegate = this.prisma[model];
         const [total, rows] = await Promise.all([
-            this.prisma.finalidade.count({ where }),
-            this.prisma.finalidade.findMany({
+            delegate.count({ where }),
+            delegate.findMany({
                 where,
-                orderBy: { ordem: 'asc' },
-                select: { id: true, codigo: true, label: true, ordem: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true },
                 skip,
                 take: size,
             }),
         ]);
         return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, rows);
     }
-    async getTiposImovel() {
-        const rows = await this.prisma.tipoimovel.findMany({
-            where: { ativo: true },
-            orderBy: { ordem: 'asc' },
-            select: { id: true, codigo: true, label: true, ordem: true },
-        });
-        return rows;
+    async getFinalidadeUsoPaginado(pagination) {
+        return this.paginateParam('finalidadeuso', pagination);
+    }
+    async getFinalidadeContratacaoPaginado(pagination) {
+        return this.paginateParam('finalidadecontratacao', pagination);
     }
     async getTiposImovelPaginado(pagination) {
         const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
@@ -56,90 +48,24 @@ let ParametrosService = class ParametrosService {
             this.prisma.tipoimovel.count({ where }),
             this.prisma.tipoimovel.findMany({
                 where,
-                orderBy: { ordem: 'asc' },
-                select: { id: true, codigo: true, label: true, ordem: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true, finalidadeusocodigo: true },
                 skip,
                 take: size,
             }),
         ]);
-        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, rows);
-    }
-    async getTiposCasa() {
-        const rows = await this.prisma.tipocasa.findMany({
-            where: { ativo: true },
-            orderBy: { ordem: 'asc' },
-            select: { id: true, codigo: true, label: true, ordem: true },
-        });
-        return rows;
-    }
-    async getTiposCasaPaginado(pagination) {
-        const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
-        const where = { ativo: true };
-        const [total, rows] = await Promise.all([
-            this.prisma.tipocasa.count({ where }),
-            this.prisma.tipocasa.findMany({
-                where,
-                orderBy: { ordem: 'asc' },
-                select: { id: true, codigo: true, label: true, ordem: true },
-                skip,
-                take: size,
-            }),
-        ]);
-        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, rows);
-    }
-    async getMobilias() {
-        const rows = await this.prisma.mobilia.findMany({
-            where: { ativo: true },
-            orderBy: { ordem: 'asc' },
-            select: { id: true, codigo: true, label: true, ordem: true },
-        });
-        return rows;
+        const conteudo = rows.map((r) => ({
+            codigo: r.codigo,
+            nome: r.nome,
+            finalidadeUsoCodigo: r.finalidadeusocodigo,
+        }));
+        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, conteudo);
     }
     async getMobiliasPaginado(pagination) {
-        const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
-        const where = { ativo: true };
-        const [total, rows] = await Promise.all([
-            this.prisma.mobilia.count({ where }),
-            this.prisma.mobilia.findMany({
-                where,
-                orderBy: { ordem: 'asc' },
-                select: { id: true, codigo: true, label: true, ordem: true },
-                skip,
-                take: size,
-            }),
-        ]);
-        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, rows);
+        return this.paginateParam('mobilia', pagination);
     }
-    async getFeatures() {
-        const rows = await this.prisma.feature.findMany({
-            where: { ativo: true },
-            orderBy: { ordem: 'asc' },
-            select: { id: true, codigo: true, label: true, ordem: true },
-        });
-        return rows;
-    }
-    async getFeaturesPaginado(pagination) {
-        const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
-        const where = { ativo: true };
-        const [total, rows] = await Promise.all([
-            this.prisma.feature.count({ where }),
-            this.prisma.feature.findMany({
-                where,
-                orderBy: { ordem: 'asc' },
-                select: { id: true, codigo: true, label: true, ordem: true },
-                skip,
-                take: size,
-            }),
-        ]);
-        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, rows);
-    }
-    async getPlanos() {
-        const rows = await this.prisma.plano.findMany({
-            where: { ativo: true },
-            orderBy: { ordem: 'asc' },
-            select: { id: true, codigo: true, label: true, ordem: true },
-        });
-        return rows;
+    async getUrgenciaPaginado(pagination) {
+        return this.paginateParam('urgencia', pagination);
     }
     async getPlanosPaginado(pagination) {
         const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
@@ -148,46 +74,67 @@ let ParametrosService = class ParametrosService {
             this.prisma.plano.count({ where }),
             this.prisma.plano.findMany({
                 where,
-                orderBy: { ordem: 'asc' },
-                select: { id: true, codigo: true, label: true, ordem: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true, precomensal: true },
                 skip,
                 take: size,
             }),
         ]);
-        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, rows);
-    }
-    getCompraOuAluguel() {
-        return [
-            { valor: 'compra', label: 'Compra', ordem: 1 },
-            { valor: 'aluguel', label: 'Aluguel', ordem: 2 },
-        ];
-    }
-    async getCompraOuAluguelPaginado(pagination) {
-        const { page, size } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
-        const itens = this.getCompraOuAluguel();
-        const total = itens.length;
-        const start = (page - 1) * size;
-        const end = start + size;
-        const conteudo = itens.slice(start, end);
+        const conteudo = rows.map((r) => ({
+            codigo: r.codigo,
+            nome: r.nome,
+            precoMensal: (0, decimal_1.decimalToNumber)(r.precomensal),
+        }));
         return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, conteudo);
     }
     async getAll() {
-        const [finalidade, tipoimovel, tipocasa, mobilia, feature, plano] = await Promise.all([
-            this.getFinalidades(),
-            this.getTiposImovel(),
-            this.getTiposCasa(),
-            this.getMobilias(),
-            this.getFeatures(),
-            this.getPlanos(),
+        const [finalidadeuso, finalidadecontratacao, tipoimovel, mobilia, urgencia, planos] = await Promise.all([
+            this.prisma.finalidadeuso.findMany({
+                where: { ativo: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true },
+            }),
+            this.prisma.finalidadecontratacao.findMany({
+                where: { ativo: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true },
+            }),
+            this.prisma.tipoimovel.findMany({
+                where: { ativo: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true, finalidadeusocodigo: true },
+            }),
+            this.prisma.mobilia.findMany({
+                where: { ativo: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true },
+            }),
+            this.prisma.urgencia.findMany({
+                where: { ativo: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true },
+            }),
+            this.prisma.plano.findMany({
+                where: { ativo: true },
+                orderBy: { nome: 'asc' },
+                select: { codigo: true, nome: true, precomensal: true },
+            }),
         ]);
         return {
-            finalidade,
-            tipoimovel,
-            tipocasa,
+            finalidadeuso,
+            finalidadecontratacao,
+            tipoimovel: tipoimovel.map((r) => ({
+                codigo: r.codigo,
+                nome: r.nome,
+                finalidadeUsoCodigo: r.finalidadeusocodigo,
+            })),
             mobilia,
-            feature,
-            plano,
-            compraoualuguel: this.getCompraOuAluguel(),
+            urgencia,
+            plano: planos.map((p) => ({
+                codigo: p.codigo,
+                nome: p.nome,
+                precoMensal: (0, decimal_1.decimalToNumber)(p.precomensal),
+            })),
         };
     }
 };

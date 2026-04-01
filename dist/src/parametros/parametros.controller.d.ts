@@ -1,29 +1,19 @@
-import { ParametrosService, ParametroItem } from './parametros.service';
+import { ParametrosService } from './parametros.service';
 export declare class ParametrosController {
     private parametros;
     constructor(parametros: ParametrosService);
     getAll(): Promise<{
-        finalidade: ParametroItem[];
-        tipoimovel: ParametroItem[];
-        tipocasa: ParametroItem[];
-        mobilia: ParametroItem[];
-        feature: ParametroItem[];
-        plano: ParametroItem[];
-        compraoualuguel: {
-            valor: string;
-            label: string;
-            ordem: number;
-        }[];
+        finalidadeuso: import("./parametros.service").ParametroItem[];
+        finalidadecontratacao: import("./parametros.service").ParametroItem[];
+        tipoimovel: import("./parametros.service").TipoImovelParametro[];
+        mobilia: import("./parametros.service").ParametroItem[];
+        urgencia: import("./parametros.service").ParametroItem[];
+        plano: import("./parametros.service").PlanoParametro[];
     }>;
-    getFinalidades(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<ParametroItem>>;
-    getTiposImovel(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<ParametroItem>>;
-    getTiposCasa(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<ParametroItem>>;
-    getMobilias(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<ParametroItem>>;
-    getFeatures(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<ParametroItem>>;
-    getPlanos(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<ParametroItem>>;
-    getCompraOuAluguel(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
-        valor: string;
-        label: string;
-        ordem: number;
-    }>>;
+    getFinalidadeUso(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<import("./parametros.service").ParametroItem>>;
+    getFinalidadeContratacao(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<import("./parametros.service").ParametroItem>>;
+    getTiposImovel(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<import("./parametros.service").TipoImovelParametro>>;
+    getMobilias(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<import("./parametros.service").ParametroItem>>;
+    getUrgencia(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<import("./parametros.service").ParametroItem>>;
+    getPlanos(pagina?: string, tamanho?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<import("./parametros.service").PlanoParametro>>;
 }

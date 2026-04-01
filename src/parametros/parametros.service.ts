@@ -2,36 +2,41 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { getPaginationParams } from '../common/dto/pagination-query.dto';
 import { buildPaginatedResponse, PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { decimalToNumber } from '../common/utils/decimal';
 
 export interface ParametroItem {
-  id: string;
-  codigo: string;
-  label: string;
-  ordem: number;
+  codigo: number;
+  nome: string;
+}
+
+export interface TipoImovelParametro extends ParametroItem {
+  finalidadeUsoCodigo: number;
+}
+
+export interface PlanoParametro extends ParametroItem {
+  precoMensal: number;
 }
 
 @Injectable()
 export class ParametrosService {
   constructor(private prisma: PrismaService) {}
 
-  async getFinalidades(): Promise<ParametroItem[]> {
-    const rows = await this.prisma.finalidade.findMany({
-      where: { ativo: true },
-      orderBy: { ordem: 'asc' },
-      select: { id: true, codigo: true, label: true, ordem: true },
-    });
-    return rows;
-  }
-
-  async getFinalidadesPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<ParametroItem>> {
+  private async paginateParam(
+    model: 'finalidadeuso' | 'finalidadecontratacao' | 'mobilia' | 'urgencia',
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<ParametroItem>> {
     const { page, size, skip } = getPaginationParams(pagination);
     const where = { ativo: true } as const;
+    const delegate = this.prisma[model] as unknown as {
+      count: (args: object) => Promise<number>;
+      findMany: (args: object) => Promise<ParametroItem[]>;
+    };
     const [total, rows] = await Promise.all([
-      this.prisma.finalidade.count({ where }),
-      this.prisma.finalidade.findMany({
+      delegate.count({ where }),
+      delegate.findMany({
         where,
-        orderBy: { ordem: 'asc' },
-        select: { id: true, codigo: true, label: true, ordem: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true },
         skip,
         take: size,
       }),
@@ -39,173 +44,132 @@ export class ParametrosService {
     return buildPaginatedResponse(page, size, total, rows);
   }
 
-  async getTiposImovel(): Promise<ParametroItem[]> {
-    const rows = await this.prisma.tipoimovel.findMany({
-      where: { ativo: true },
-      orderBy: { ordem: 'asc' },
-      select: { id: true, codigo: true, label: true, ordem: true },
-    });
-    return rows;
+  async getFinalidadeUsoPaginado(
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<ParametroItem>> {
+    return this.paginateParam('finalidadeuso', pagination);
   }
 
-  async getTiposImovelPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<ParametroItem>> {
+  async getFinalidadeContratacaoPaginado(
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<ParametroItem>> {
+    return this.paginateParam('finalidadecontratacao', pagination);
+  }
+
+  async getTiposImovelPaginado(
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<TipoImovelParametro>> {
     const { page, size, skip } = getPaginationParams(pagination);
     const where = { ativo: true } as const;
     const [total, rows] = await Promise.all([
       this.prisma.tipoimovel.count({ where }),
       this.prisma.tipoimovel.findMany({
         where,
-        orderBy: { ordem: 'asc' },
-        select: { id: true, codigo: true, label: true, ordem: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true, finalidadeusocodigo: true },
         skip,
         take: size,
       }),
     ]);
-    return buildPaginatedResponse(page, size, total, rows);
+    const conteudo: TipoImovelParametro[] = rows.map((r) => ({
+      codigo: r.codigo,
+      nome: r.nome,
+      finalidadeUsoCodigo: r.finalidadeusocodigo,
+    }));
+    return buildPaginatedResponse(page, size, total, conteudo);
   }
 
-  async getTiposCasa(): Promise<ParametroItem[]> {
-    const rows = await this.prisma.tipocasa.findMany({
-      where: { ativo: true },
-      orderBy: { ordem: 'asc' },
-      select: { id: true, codigo: true, label: true, ordem: true },
-    });
-    return rows;
+  async getMobiliasPaginado(
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<ParametroItem>> {
+    return this.paginateParam('mobilia', pagination);
   }
 
-  async getTiposCasaPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<ParametroItem>> {
-    const { page, size, skip } = getPaginationParams(pagination);
-    const where = { ativo: true } as const;
-    const [total, rows] = await Promise.all([
-      this.prisma.tipocasa.count({ where }),
-      this.prisma.tipocasa.findMany({
-        where,
-        orderBy: { ordem: 'asc' },
-        select: { id: true, codigo: true, label: true, ordem: true },
-        skip,
-        take: size,
-      }),
-    ]);
-    return buildPaginatedResponse(page, size, total, rows);
+  async getUrgenciaPaginado(
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<ParametroItem>> {
+    return this.paginateParam('urgencia', pagination);
   }
 
-  async getMobilias(): Promise<ParametroItem[]> {
-    const rows = await this.prisma.mobilia.findMany({
-      where: { ativo: true },
-      orderBy: { ordem: 'asc' },
-      select: { id: true, codigo: true, label: true, ordem: true },
-    });
-    return rows;
-  }
-
-  async getMobiliasPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<ParametroItem>> {
-    const { page, size, skip } = getPaginationParams(pagination);
-    const where = { ativo: true } as const;
-    const [total, rows] = await Promise.all([
-      this.prisma.mobilia.count({ where }),
-      this.prisma.mobilia.findMany({
-        where,
-        orderBy: { ordem: 'asc' },
-        select: { id: true, codigo: true, label: true, ordem: true },
-        skip,
-        take: size,
-      }),
-    ]);
-    return buildPaginatedResponse(page, size, total, rows);
-  }
-
-  async getFeatures(): Promise<ParametroItem[]> {
-    const rows = await this.prisma.feature.findMany({
-      where: { ativo: true },
-      orderBy: { ordem: 'asc' },
-      select: { id: true, codigo: true, label: true, ordem: true },
-    });
-    return rows;
-  }
-
-  async getFeaturesPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<ParametroItem>> {
-    const { page, size, skip } = getPaginationParams(pagination);
-    const where = { ativo: true } as const;
-    const [total, rows] = await Promise.all([
-      this.prisma.feature.count({ where }),
-      this.prisma.feature.findMany({
-        where,
-        orderBy: { ordem: 'asc' },
-        select: { id: true, codigo: true, label: true, ordem: true },
-        skip,
-        take: size,
-      }),
-    ]);
-    return buildPaginatedResponse(page, size, total, rows);
-  }
-
-  async getPlanos(): Promise<ParametroItem[]> {
-    const rows = await this.prisma.plano.findMany({
-      where: { ativo: true },
-      orderBy: { ordem: 'asc' },
-      select: { id: true, codigo: true, label: true, ordem: true },
-    });
-    return rows;
-  }
-
-  async getPlanosPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<ParametroItem>> {
+  async getPlanosPaginado(
+    pagination: { pagina?: number | string; tamanho?: number | string },
+  ): Promise<PaginatedResponseDto<PlanoParametro>> {
     const { page, size, skip } = getPaginationParams(pagination);
     const where = { ativo: true } as const;
     const [total, rows] = await Promise.all([
       this.prisma.plano.count({ where }),
       this.prisma.plano.findMany({
         where,
-        orderBy: { ordem: 'asc' },
-        select: { id: true, codigo: true, label: true, ordem: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true, precomensal: true },
         skip,
         take: size,
       }),
     ]);
-    return buildPaginatedResponse(page, size, total, rows);
-  }
-
-  getCompraOuAluguel(): { valor: string; label: string; ordem: number }[] {
-    return [
-      { valor: 'compra', label: 'Compra', ordem: 1 },
-      { valor: 'aluguel', label: 'Aluguel', ordem: 2 },
-    ];
-  }
-
-  async getCompraOuAluguelPaginado(pagination: { pagina?: number | string; tamanho?: number | string }): Promise<PaginatedResponseDto<{ valor: string; label: string; ordem: number }>> {
-    const { page, size } = getPaginationParams(pagination);
-    const itens = this.getCompraOuAluguel();
-    const total = itens.length;
-    const start = (page - 1) * size;
-    const end = start + size;
-    const conteudo = itens.slice(start, end);
+    const conteudo: PlanoParametro[] = rows.map((r) => ({
+      codigo: r.codigo,
+      nome: r.nome,
+      precoMensal: decimalToNumber(r.precomensal),
+    }));
     return buildPaginatedResponse(page, size, total, conteudo);
   }
 
   async getAll(): Promise<{
-    finalidade: ParametroItem[];
-    tipoimovel: ParametroItem[];
-    tipocasa: ParametroItem[];
+    finalidadeuso: ParametroItem[];
+    finalidadecontratacao: ParametroItem[];
+    tipoimovel: TipoImovelParametro[];
     mobilia: ParametroItem[];
-    feature: ParametroItem[];
-    plano: ParametroItem[];
-    compraoualuguel: { valor: string; label: string; ordem: number }[];
+    urgencia: ParametroItem[];
+    plano: PlanoParametro[];
   }> {
-    const [finalidade, tipoimovel, tipocasa, mobilia, feature, plano] = await Promise.all([
-      this.getFinalidades(),
-      this.getTiposImovel(),
-      this.getTiposCasa(),
-      this.getMobilias(),
-      this.getFeatures(),
-      this.getPlanos(),
+    const [finalidadeuso, finalidadecontratacao, tipoimovel, mobilia, urgencia, planos] = await Promise.all([
+      this.prisma.finalidadeuso.findMany({
+        where: { ativo: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true },
+      }),
+      this.prisma.finalidadecontratacao.findMany({
+        where: { ativo: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true },
+      }),
+      this.prisma.tipoimovel.findMany({
+        where: { ativo: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true, finalidadeusocodigo: true },
+      }),
+      this.prisma.mobilia.findMany({
+        where: { ativo: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true },
+      }),
+      this.prisma.urgencia.findMany({
+        where: { ativo: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true },
+      }),
+      this.prisma.plano.findMany({
+        where: { ativo: true },
+        orderBy: { nome: 'asc' },
+        select: { codigo: true, nome: true, precomensal: true },
+      }),
     ]);
+
     return {
-      finalidade,
-      tipoimovel,
-      tipocasa,
+      finalidadeuso,
+      finalidadecontratacao,
+      tipoimovel: tipoimovel.map((r) => ({
+        codigo: r.codigo,
+        nome: r.nome,
+        finalidadeUsoCodigo: r.finalidadeusocodigo,
+      })),
       mobilia,
-      feature,
-      plano,
-      compraoualuguel: this.getCompraOuAluguel(),
+      urgencia,
+      plano: planos.map((p) => ({
+        codigo: p.codigo,
+        nome: p.nome,
+        precoMensal: decimalToNumber(p.precomensal),
+      })),
     };
   }
 }

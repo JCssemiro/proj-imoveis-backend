@@ -4,20 +4,22 @@ import {
   IsString,
   IsNumber,
   IsOptional,
-  IsIn,
+  IsBoolean,
   Min,
+  Max,
   MaxLength,
-  IsUUID,
   ValidateNested,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocalizacaoInteresseDto } from './localizacao-interesse.dto';
 
+const MAX_CODIGO = 2147483647;
+
 export class CreateInterestDto {
   @ApiPropertyOptional({
-    description: 'Localizações de interesse (CEP, município cod IBGE, bairro)',
+    description: 'Localizações',
     type: [LocalizacaoInteresseDto],
-    example: [{ cep: '01310100', bairro: 'Bela Vista' }, { municipiocodibge: '3550308' }],
   })
   @IsOptional()
   @IsArray()
@@ -25,92 +27,92 @@ export class CreateInterestDto {
   @Type(() => LocalizacaoInteresseDto)
   localizacoes?: LocalizacaoInteresseDto[];
 
-  @ApiProperty({
-    description: 'Compra ou aluguel. Valores: compra | aluguel (obter de GET /parametros/compraoualuguel)',
-    enum: ['compra', 'aluguel'],
-  })
-  @IsIn(['compra', 'aluguel'])
-  compraOuAluguel: 'compra' | 'aluguel';
+  @ApiProperty({ description: 'Código em GET /parametros/finalidadecontratacao', example: 1 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(MAX_CODIGO)
+  finalidadeContratacaoCodigo: number;
 
-  @ApiProperty({
-    description: 'ID da finalidade (obter de GET /parametros/finalidade)',
-    example: 'uuid',
-  })
-  @IsUUID('4')
-  finalidadeId: string;
+  @ApiProperty({ description: 'Código em GET /parametros/finalidadeuso', example: 1 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(MAX_CODIGO)
+  finalidadeUsoCodigo: number;
 
-  @ApiProperty({
-    description: 'ID do tipo de imóvel (obter de GET /parametros/tipoimovel)',
-    example: 'uuid',
-  })
-  @IsUUID('4')
-  tipoImovelId: string;
+  @ApiProperty({ description: 'Código em GET /parametros/tipoimovel (mesmo finalidadeUsoCodigo)', example: 1 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(MAX_CODIGO)
+  tipoImovelCodigo: number;
 
-  @ApiPropertyOptional({
-    description: 'ID do tipo de casa (obter de GET /parametros/tipocasa). Se omitido, usa o primeiro ativo por ordem.',
-  })
-  @IsOptional()
-  @IsUUID('4')
-  tipoCasaId?: string;
+  @ApiProperty({ description: 'Código em GET /parametros/mobilia', example: 1 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(MAX_CODIGO)
+  mobiliaCodigo: number;
 
-  @ApiPropertyOptional({ description: 'Quantidade de quartos (ex: 2, 6+)' })
-  @IsOptional()
-  @IsString()
-  quartos?: string;
+  @ApiProperty({ description: 'Código em GET /parametros/urgencia', example: 1 })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(MAX_CODIGO)
+  urgenciaCodigo: number;
 
-  @ApiPropertyOptional({ description: 'Quantidade de suítes (ex: 1, 4+)' })
-  @IsOptional()
-  @IsString()
-  suites?: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  banheiros?: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  garagens?: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  metragemTerreno?: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  areaConstruida?: string;
+  @ApiProperty({ description: 'Aceita financiamento' })
+  @IsBoolean()
+  aceitaFinanciamento: boolean;
 
   @ApiPropertyOptional({
-    description: 'ID da mobília (obter de GET /parametros/mobilia). Se omitido, usa o primeiro ativo por ordem.',
+    description: 'Quantidades de quartos aceitas (ex.: [1,2] para 1 ou 2 quartos)',
+    type: [Number],
+    example: [1, 2],
   })
   @IsOptional()
-  @IsUUID('4')
-  mobiliaId?: string;
+  @IsArray()
+  @Type(() => Number)
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @Max(50, { each: true })
+  @ArrayMaxSize(30)
+  quartos?: number[];
+
+  @ApiPropertyOptional({
+    description: 'Quantidades de suítes aceitas',
+    type: [Number],
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => Number)
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @Max(50, { each: true })
+  @ArrayMaxSize(30)
+  suites?: number[];
+
+  @ApiPropertyOptional({ description: 'Metragem (m²)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  metragem?: number | null;
 
   @ApiPropertyOptional({ minimum: 0 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   valorMinimo?: number | null;
 
   @ApiPropertyOptional({ minimum: 0 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   valorMaximo?: number | null;
-
-  @ApiPropertyOptional({
-    description: 'IDs das features (obter de GET /parametros/feature). Array de UUID.',
-    type: [String],
-    example: ['uuid1', 'uuid2'],
-  })
-  @IsOptional()
-  @IsArray()
-  @IsUUID('4', { each: true })
-  featureIds?: string[];
 
   @ApiPropertyOptional({ maxLength: 5000 })
   @IsOptional()

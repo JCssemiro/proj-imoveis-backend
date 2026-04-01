@@ -3,6 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterClientDto, RegisterBrokerDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+export type AuthUserPlan = {
+    codigo: number;
+    nome: string;
+    precoMensal: number;
+} | null;
 export interface AuthResponse {
     user: {
         id: string;
@@ -13,6 +18,7 @@ export interface AuthResponse {
         avatar: string | null;
         creci: string | null;
         subscriptionActive: boolean | null;
+        plan: AuthUserPlan;
     };
     token: string;
 }

@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const users_service_1 = require("./users.service");
 const update_profile_dto_1 = require("./dto/update-profile.dto");
+const user_profile_response_dto_1 = require("./dto/user-profile-response.dto");
 const current_user_decorator_1 = require("../common/decorators/current-user.decorator");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const roles_guard_1 = require("../common/guards/roles.guard");
@@ -32,13 +33,17 @@ let UsersController = class UsersController {
         return this.users.updateMe(userId, dto);
     }
     changeBrokerPlan(brokerId, dto) {
-        return this.users.changeBrokerPlan(brokerId, dto.planoId);
+        return this.users.changeBrokerPlan(brokerId, Number(dto.planoCodigo));
     }
 };
 exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)('eu'),
-    (0, swagger_1.ApiOperation)({ summary: 'Perfil do usuário autenticado' }),
+    (0, swagger_1.ApiOkResponse)({ type: user_profile_response_dto_1.UserProfileResponseDto }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Perfil do usuário autenticado',
+        description: 'Retorna `plan` (codigo, nome, precoMensal) para corretores com plano vinculado; clientes e corretores sem plano recebem `plan: null`.',
+    }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -46,6 +51,7 @@ __decorate([
 ], UsersController.prototype, "getMe", null);
 __decorate([
     (0, common_1.Patch)('eu'),
+    (0, swagger_1.ApiOkResponse)({ type: user_profile_response_dto_1.UserProfileResponseDto }),
     (0, swagger_1.ApiOperation)({ summary: 'Atualizar perfil' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __param(1, (0, common_1.Body)()),
@@ -58,6 +64,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('broker'),
+    (0, swagger_1.ApiOkResponse)({ type: user_profile_response_dto_1.UserProfileResponseDto }),
     (0, swagger_1.ApiOperation)({ summary: 'Alterar plano do corretor' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __param(1, (0, common_1.Body)()),

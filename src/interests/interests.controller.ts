@@ -54,10 +54,20 @@ export class InterestsController {
   @ApiOperation({
     summary: 'Criar interesse de imóvel',
     description:
-      'Envie IDs (UUID) retornados por GET /parametros: finalidadeId, tipoImovelId, tipoCasaId (opcional), mobiliaId (opcional), featureIds (array). compraOuAluguel: "compra" ou "aluguel".',
+      'Códigos de GET /parametros: finalidadeContratacaoCodigo, finalidadeUsoCodigo, tipoImovelCodigo (deve bater com finalidadeUsoCodigo), mobiliaCodigo, urgenciaCodigo. aceitaFinanciamento (boolean). quartos e suites: arrays de inteiros (quantidades aceitas).',
   })
   create(@CurrentUser('sub') clientId: string, @Body() dto: CreateInterestDto) {
     return this.interests.create(clientId, dto);
+  }
+
+  @Patch(':id/fechar')
+  @ApiOperation({
+    summary: 'Encerrar lead (interesse)',
+    description:
+      'Define status closed no interesse. Corretores não abrem novas conversas. DELETE /interesse/:id remove interesse e conversas (cascade).',
+  })
+  fecharLead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('sub') clientId: string) {
+    return this.interests.fecharLead(id, clientId);
   }
 
   @Patch(':id')
@@ -72,7 +82,11 @@ export class InterestsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Remover interesse' })
+  @ApiOperation({
+    summary: 'Excluir interesse',
+    description:
+      'Remove o interesse no banco. Em cascata: conversas e mensagens vinculadas a esse interesse.',
+  })
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('sub') clientId: string) {
     return this.interests.remove(id, clientId);
   }

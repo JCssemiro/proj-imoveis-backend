@@ -25,7 +25,10 @@ let RolesGuard = class RolesGuard {
         if (!requiredRoles?.length)
             return true;
         const { user } = context.switchToHttp().getRequest();
-        const hasRole = requiredRoles.includes(user?.type);
+        if (!user?.sub || !user.type) {
+            throw new common_1.UnauthorizedException('Autenticação necessária');
+        }
+        const hasRole = requiredRoles.includes(user.type);
         if (!hasRole) {
             throw new common_1.ForbiddenException('Acesso negado para este recurso');
         }

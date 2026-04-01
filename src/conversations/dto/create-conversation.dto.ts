@@ -2,15 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID } from 'class-validator';
 
 export class CreateConversationDto {
-  @ApiProperty()
-  @IsUUID()
-  leadId: string;
+  @ApiProperty({ description: 'UUID do interesse (lead) — mesmo id retornado em GET /interesse e /prospecto' })
+  @IsUUID('4')
+  interesseImovelId: string;
 
   @ApiProperty()
-  @IsUUID()
+  @IsUUID('4')
   clientId: string;
 
   @ApiProperty()
-  @IsUUID()
+  @IsUUID('4')
   brokerId: string;
 }

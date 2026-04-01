@@ -27,7 +27,7 @@ let BrokersService = class BrokersService {
                 where,
                 orderBy: { nome: 'asc' },
                 include: {
-                    _count: { select: { leadsAsBroker: true } },
+                    _count: { select: { conversationsAsBroker: true } },
                 },
                 skip,
                 take: size,
@@ -42,7 +42,7 @@ let BrokersService = class BrokersService {
             avatar: b.avatar,
             specialties: [],
             rating: 0,
-            totalLeads: b._count.leadsAsBroker,
+            totalConversas: b._count.conversationsAsBroker,
         }));
         return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, conteudo);
     }

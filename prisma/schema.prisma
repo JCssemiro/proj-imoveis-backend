@@ -1,6 +1,4 @@
-// ImobiConnect - PostgreSQL + Prisma
-// Schema alinhado à migration: tabelas/colunas em minúsculas, enum compraoualuguel,
-// feature/localizacao parametrizados, plano corretores
+// ImobiConnect — parâmetros: PK codigo (int); entidades: UUID nativo; status lead = smallint ordenado; valores monetários Decimal
 
 generator client {
   provider = "prisma-client-js"
@@ -16,259 +14,202 @@ enum tipousuario {
   broker
 }
 
-enum statuslead {
-  new
-  contacted
-  in_progress
-  closed
-}
-
 enum tiporemetente {
   client
   broker
 }
 
-enum compraoualuguel {
-  compra
-  aluguel
+// --- Parâmetros (PK = codigo inteiro de negócio) ---
+
+model finalidadeuso {
+  codigo Int     @id @map("codigo")
+  nome   String  @db.VarChar(120)
+  ativo  Boolean @default(true)
+
+  tiposimovel tipoimovel[]
+  interesses  interesseimovel[]
+
+  @@index([ativo])
+  @@map("finalidadeuso")
 }
 
-// =============================================================================
-// Parâmetros (cadastro sem alterar schema)
-// =============================================================================
-
-model finalidade {
-  id        String   @id @default(uuid())
-  codigo    String   @unique
-  label     String
-  ativo     Boolean  @default(true)
-  ordem     Int      @default(0)
-  criadoem  DateTime @default(now())
+model finalidadecontratacao {
+  codigo Int     @id @map("codigo")
+  nome   String  @db.VarChar(120)
+  ativo  Boolean @default(true)
 
   interesses interesseimovel[]
 
-  @@index([ativo, ordem])
-  @@map("finalidade")
+  @@index([ativo])
+  @@map("finalidadecontratacao")
 }
 
 model tipoimovel {
-  id       String   @id @default(uuid())
-  codigo   String   @unique
-  label    String
-  ativo    Boolean  @default(true)
-  ordem    Int      @default(0)
-  criadoem DateTime @default(now())
+  codigo                Int           @id @map("codigo")
+  nome                  String        @db.VarChar(120)
+  finalidadeusocodigo   Int           @map("finalidadeusocodigo")
+  finalidadeuso         finalidadeuso @relation(fields: [finalidadeusocodigo], references: [codigo], onDelete: Restrict)
+  ativo                 Boolean       @default(true)
 
   interesses interesseimovel[]
 
-  @@index([ativo, ordem])
+  @@index([ativo])
+  @@index([finalidadeusocodigo])
   @@map("tipoimovel")
 }
 
-model tipocasa {
-  id       String   @id @default(uuid())
-  codigo   String   @unique
-  label    String
-  ativo    Boolean  @default(true)
-  ordem    Int      @default(0)
-  criadoem DateTime @default(now())
-
-  interesses interesseimovel[]
-
-  @@index([ativo, ordem])
-  @@map("tipocasa")
-}
-
 model mobilia {
-  id       String   @id @default(uuid())
-  codigo   String   @unique
-  label    String
-  ativo    Boolean  @default(true)
-  ordem    Int      @default(0)
-  criadoem DateTime @default(now())
+  codigo Int     @id @map("codigo")
+  nome   String  @db.VarChar(120)
+  ativo  Boolean @default(true)
 
   interesses interesseimovel[]
 
-  @@index([ativo, ordem])
+  @@index([ativo])
   @@map("mobilia")
 }
 
-model feature {
-  id       String   @id @default(uuid())
-  codigo   String   @unique
-  label    String
-  ativo    Boolean  @default(true)
-  ordem    Int      @default(0)
-  criadoem DateTime @default(now())
+model urgencia {
+  codigo Int     @id @map("codigo")
+  nome   String  @db.VarChar(120)
+  ativo  Boolean @default(true)
 
-  interesses interesseimovelfeature[]
+  interesses interesseimovel[]
 
-  @@index([ativo, ordem])
-  @@map("feature")
+  @@index([ativo])
+  @@map("urgencia")
 }
 
 model plano {
-  id       String   @id @default(uuid())
-  codigo   String   @unique
-  label    String
-  ativo    Boolean  @default(true)
-  ordem    Int      @default(0)
-  criadoem DateTime @default(now())
+  codigo      Int      @id @map("codigo")
+  nome        String   @db.VarChar(120)
+  precomensal Decimal  @default(0) @db.Decimal(14, 2)
+  ativo       Boolean  @default(true)
 
   corretores usuario[]
 
-  @@index([ativo, ordem])
+  @@index([ativo])
   @@map("plano")
 }
 
-// =============================================================================
-// usuario
-// =============================================================================
+// --- Entidades (PK = UUID; expostos na API) ---
 
 model usuario {
-  id                   String    @id @default(uuid())
-  nome                 String
-  email                String    @unique
-  telefone             String
-  senhahash            String
-  tipo                 tipousuario
-  creci                String?   @unique
-  planoid              String?
-  plano                plano?    @relation(fields: [planoid], references: [id], onDelete: SetNull)
-  ativoassinatura      Boolean?
-  avatar               String?
-  tokenresetarsenha    String?
-  expiraresetarsenha   DateTime?
-  criadoem             DateTime  @default(now())
-  atualizadoem         DateTime  @updatedAt
+  id                  String      @id @default(uuid()) @db.Uuid
+  nome                String      @db.VarChar(200)
+  email               String      @unique @db.VarChar(320)
+  telefone            String      @db.VarChar(30)
+  senhahash           String      @db.VarChar(255)
+  tipo                tipousuario
+  creci               String?     @unique @db.VarChar(30)
+  planocodigo         Int?        @map("planocodigo")
+  plano               plano?      @relation(fields: [planocodigo], references: [codigo], onDelete: SetNull)
+  ativoassinatura     Boolean?
+  avatar              String?     @db.VarChar(2048)
+  tokenresetarsenha   String?     @db.VarChar(128)
+  expiraresetarsenha  DateTime?
+  criadoem            DateTime    @default(now())
+  atualizadoem        DateTime    @updatedAt
 
-  interestsAsClient    interesseimovel[]
-  leadsAsBroker        prospecto[]
-  conversationsAsClient conversa[]  @relation("ClientConversations")
-  conversationsAsBroker conversa[]  @relation("BrokerConversations")
-  messagesSent         mensagem[]
+  interestsAsClient     interesseimovel[] @relation("ClientInterests")
+  conversationsAsClient conversa[]        @relation("ClientConversations")
+  conversationsAsBroker conversa[]        @relation("BrokerConversations")
+  messagesSent          mensagem[]
 
   @@index([tipo])
-  @@index([planoid])
+  @@index([planocodigo])
   @@map("usuario")
 }
 
-// =============================================================================
-// interesseimovel
-// =============================================================================
-
 model interesseimovel {
-  id               String           @id @default(uuid())
-  clientid         String
-  client           usuario          @relation(fields: [clientid], references: [id], onDelete: Cascade)
-  compraoualuguel  compraoualuguel
-  finalidadeid     String
-  finalidade       finalidade       @relation(fields: [finalidadeid], references: [id], onDelete: Restrict)
-  tipoimovelid     String
-  tipoimovel       tipoimovel       @relation(fields: [tipoimovelid], references: [id], onDelete: Restrict)
-  tipocasaid       String
-  tipocasa         tipocasa         @relation(fields: [tipocasaid], references: [id], onDelete: Restrict)
-  mobiliaid        String
-  mobilia          mobilia          @relation(fields: [mobiliaid], references: [id], onDelete: Restrict)
-  quartos          Int?
-  suites           Int?
-  metragemterreno  Int?
-  areaconstruida   Int?
-  minprice         Int              @default(0)
-  maxprice         Int              @default(0)
-  observacoes      String           @default("")
-  ativo            Boolean          @default(true)
-  criadoem         DateTime         @default(now())
+  id                          String                @id @default(uuid()) @db.Uuid
+  clientid                    String                @map("clientid") @db.Uuid
+  client                      usuario               @relation("ClientInterests", fields: [clientid], references: [id], onDelete: Cascade)
+  finalidadecontratacaocodigo Int                   @map("finalidadecontratacaocodigo")
+  finalidadecontratacao       finalidadecontratacao @relation(fields: [finalidadecontratacaocodigo], references: [codigo], onDelete: Restrict)
+  finalidadeusocodigo         Int                   @map("finalidadeusocodigo")
+  finalidadeuso               finalidadeuso         @relation(fields: [finalidadeusocodigo], references: [codigo], onDelete: Restrict)
+  tipoimovelcodigo            Int                   @map("tipoimovelcodigo")
+  tipoimovel                  tipoimovel            @relation(fields: [tipoimovelcodigo], references: [codigo], onDelete: Restrict)
+  mobiliacodigo               Int                   @map("mobiliacodigo")
+  mobilia                     mobilia               @relation(fields: [mobiliacodigo], references: [codigo], onDelete: Restrict)
+  urgenciacodigo              Int                   @map("urgenciacodigo")
+  urgencia                    urgencia              @relation(fields: [urgenciacodigo], references: [codigo], onDelete: Restrict)
+  aceitafinanciamento         Boolean               @default(false)
+  quartos                     Int[]                 @default([])
+  suites                      Int[]                 @default([])
+  metragem                    Int?
+  minprice                    Decimal               @default(0) @db.Decimal(14, 2)
+  maxprice                    Decimal               @default(0) @db.Decimal(14, 2)
+  observacoes                 String                @default("") @db.VarChar(5000)
+  status                      Int                   @default(1) @db.SmallInt
+  ativo                       Boolean               @default(true)
+  criadoem                    DateTime              @default(now())
 
-  localizacoes     localizacaointeresse[]
-  features         interesseimovelfeature[]
-  lead             prospecto?
+  localizacoes localizacaointeresse[]
+  conversas    conversa[]
 
   @@index([clientid])
   @@index([criadoem])
   @@index([ativo])
   @@index([clientid, ativo])
-  @@index([finalidadeid, tipoimovelid])
+  @@index([tipoimovelcodigo])
   @@index([minprice, maxprice])
-  @@index([compraoualuguel])
+  @@index([finalidadecontratacaocodigo])
+  @@index([finalidadeusocodigo])
+  @@index([status])
   @@map("interesseimovel")
 }
 
 model localizacaointeresse {
-  id                String          @id @default(uuid())
-  interesseimovelid String
+  id                String          @id @default(uuid()) @db.Uuid
+  interesseimovelid String          @map("interesseimovelid") @db.Uuid
   interesseimovel   interesseimovel @relation(fields: [interesseimovelid], references: [id], onDelete: Cascade)
-  cep               String?
-  municipiocodibge   String?
-  bairro            String?
+  cep               String?         @db.VarChar(12)
+  logradouro        String?         @db.VarChar(255)
+  bairro            String?         @db.VarChar(120)
+  cidade            String?         @db.VarChar(120)
+  uf                String?         @db.Char(2)
+  codibgecidade     String?         @db.VarChar(10)
 
   @@index([interesseimovelid])
   @@index([cep])
-  @@index([municipiocodibge])
+  @@index([codibgecidade])
   @@map("localizacaointeresse")
 }
 
-model interesseimovelfeature {
-  interesseimovelid String
-  interesseimovel   interesseimovel @relation(fields: [interesseimovelid], references: [id], onDelete: Cascade)
-  featureid         String
-  feature           feature         @relation(fields: [featureid], references: [id], onDelete: Restrict)
-
-  @@id([interesseimovelid, featureid])
-  @@index([featureid])
-  @@map("interesseimovelfeature")
-}
-
-model prospecto {
-  id                  String          @id @default(uuid())
-  interesseimovelid   String          @unique
-  interesse           interesseimovel @relation(fields: [interesseimovelid], references: [id], onDelete: Cascade)
-  corretorid          String?
-  corretor            usuario?        @relation(fields: [corretorid], references: [id], onDelete: SetNull)
-  status              statuslead      @default(new)
-  criadoem            DateTime        @default(now())
-
-  conversas           conversa[]
-
-  @@index([corretorid])
-  @@index([status])
-  @@index([criadoem])
-  @@index([corretorid, status])
-  @@map("prospecto")
-}
-
 model conversa {
-  id               String    @id @default(uuid())
-  clientid         String
-  client           usuario   @relation("ClientConversations", fields: [clientid], references: [id], onDelete: Cascade)
-  corretorid       String
-  corretor         usuario   @relation("BrokerConversations", fields: [corretorid], references: [id], onDelete: Cascade)
-  leadid           String
-  lead             prospecto @relation(fields: [leadid], references: [id], onDelete: Cascade)
-  resumointeresse  String
-  ativo            Boolean   @default(true)
-  atualizadoem     DateTime  @updatedAt
+  id                String          @id @default(uuid()) @db.Uuid
+  clientid          String          @map("clientid") @db.Uuid
+  client            usuario         @relation("ClientConversations", fields: [clientid], references: [id], onDelete: Cascade)
+  corretorid        String          @map("corretorid") @db.Uuid
+  corretor          usuario         @relation("BrokerConversations", fields: [corretorid], references: [id], onDelete: Cascade)
+  interesseimovelid String          @map("interesseimovelid") @db.Uuid
+  interesseimovel   interesseimovel @relation(fields: [interesseimovelid], references: [id], onDelete: Cascade)
+  resumointeresse   String          @map("resumointeresse") @db.VarChar(512)
+  ativo             Boolean         @default(true)
+  atualizadoem      DateTime        @updatedAt
 
   mensagens mensagem[]
 
   @@index([clientid])
   @@index([corretorid])
-  @@index([leadid, ativo])
+  @@index([interesseimovelid, ativo])
   @@index([corretorid, ativo])
   @@index([atualizadoem])
   @@map("conversa")
 }
 
 model mensagem {
-  id             String       @id @default(uuid())
-  conversaid     String
-  conversa       conversa     @relation(fields: [conversaid], references: [id], onDelete: Cascade)
-  remetenteid    String
-  remetente      usuario      @relation(fields: [remetenteid], references: [id], onDelete: Cascade)
-  tiporemetente  tiporemetente
-  conteudo       String
-  urlimagem      String?
-  criadoem       DateTime     @default(now())
+  id            String        @id @default(uuid()) @db.Uuid
+  conversaid    String        @map("conversaid") @db.Uuid
+  conversa      conversa      @relation(fields: [conversaid], references: [id], onDelete: Cascade)
+  remetenteid   String        @map("remetenteid") @db.Uuid
+  remetente     usuario       @relation(fields: [remetenteid], references: [id], onDelete: Cascade)
+  tiporemetente tiporemetente @map("tiporemetente")
+  conteudo      String        @db.VarChar(4000)
+  urlimagem     String?       @map("urlimagem") @db.VarChar(2048)
+  criadoem      DateTime      @default(now())
 
   @@index([conversaid])
   @@index([criadoem])

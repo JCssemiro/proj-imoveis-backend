@@ -13,18 +13,20 @@ exports.ConversationsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
+const status_lead_1 = require("../common/constants/status-lead");
+const decimal_1 = require("../common/utils/decimal");
 const pagination_query_dto_1 = require("../common/dto/pagination-query.dto");
 const paginated_response_dto_1 = require("../common/dto/paginated-response.dto");
-function buildSummary(interest) {
-    const locPart = interest.localizacoes?.length > 0
-        ? interest.localizacoes
-            .map((l) => l.bairro || l.cep || l.municipiocodibge || '')
+function buildSummary(interesse) {
+    const locPart = interesse.localizacoes?.length > 0
+        ? interesse.localizacoes
+            .map((l) => l.bairro || l.cidade || l.cep || '')
             .filter(Boolean)
             .join(', ') || 'N/A'
         : 'N/A';
-    const compra = interest.compraoualuguel ?? 'N/A';
-    const tipo = interest.tipoimovel?.label ?? interest.tipoimovel?.codigo ?? 'N/A';
-    return `${compra} - ${tipo} em ${locPart} - R$ ${interest.minprice} a R$ ${interest.maxprice}`;
+    const fc = interesse.finalidadecontratacao?.nome ?? 'N/A';
+    const tipo = interesse.tipoimovel?.nome ?? 'N/A';
+    return `${fc} - ${tipo} em ${locPart} - R$ ${(0, decimal_1.decimalToNumber)(interesse.minprice)} a R$ ${(0, decimal_1.decimalToNumber)(interesse.maxprice)}`;
 }
 let ConversationsService = class ConversationsService {
     constructor(prisma) {
@@ -32,9 +34,7 @@ let ConversationsService = class ConversationsService {
     }
     async findAll(userId, userType, pagination) {
         const { page, size, skip } = (0, pagination_query_dto_1.getPaginationParams)(pagination);
-        const where = userType === 'client'
-            ? { clientid: userId }
-            : { corretorid: userId };
+        const where = userType === 'client' ? { clientid: userId } : { corretorid: userId };
         const [total, list] = await Promise.all([
             this.prisma.conversa.count({ where }),
             this.prisma.conversa.findMany({
@@ -43,15 +43,14 @@ let ConversationsService = class ConversationsService {
                 include: {
                     client: true,
                     corretor: true,
-                    lead: { include: { interesse: { include: { tipoimovel: true } } } },
+                    interesseimovel: { include: { tipoimovel: true } },
                     mensagens: { orderBy: { criadoem: 'desc' }, take: 1 },
                 },
                 skip,
                 take: size,
             }),
         ]);
-        const conteudo = list.map((c) => this.toConversation(c, false));
-        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, conteudo);
+        return (0, paginated_response_dto_1.buildPaginatedResponse)(page, size, total, list.map((c) => this.toConversation(c, false)));
     }
     async findOne(id, user) {
         const conv = await this.prisma.conversa.findUnique({
@@ -59,7 +58,7 @@ let ConversationsService = class ConversationsService {
             include: {
                 client: true,
                 corretor: true,
-                lead: { include: { interesse: { include: { tipoimovel: true } } } },
+                interesseimovel: { include: { tipoimovel: true } },
                 mensagens: { orderBy: { criadoem: 'asc' } },
             },
         });
@@ -74,46 +73,48 @@ let ConversationsService = class ConversationsService {
         if (dto.brokerId !== brokerId) {
             throw new common_1.ForbiddenException('Só é possível criar conversa para si mesmo');
         }
-        const existingConversation = await this.prisma.conversa.findFirst({
-            where: { corretorid: dto.brokerId, ativo: true },
+        const interesse = await this.prisma.interesseimovel.findUnique({
+            where: { id: dto.interesseImovelId },
+            include: {
+                tipoimovel: true,
+                finalidadecontratacao: true,
+                localizacoes: true,
+            },
         });
-        if (existingConversation) {
-            throw new common_1.ConflictException('Já existe um chat aberto para este corretor. Encerrar o chat atual para iniciar outro.');
+        if (!interesse)
+            throw new common_1.NotFoundException('Interesse não encontrado');
+        if ((0, status_lead_1.isClosedStatus)(interesse.status) || !interesse.ativo) {
+            throw new common_1.ForbiddenException('Este interesse está encerrado ou inativo. Não é possível abrir conversa.');
         }
-        const lead = await this.prisma.prospecto.findUnique({
-            where: { id: dto.leadId },
-            include: { interesse: { include: { tipoimovel: true, localizacoes: true } } },
+        const chatAberto = await this.prisma.conversa.findFirst({
+            where: {
+                interesseimovelid: dto.interesseImovelId,
+                corretorid: dto.brokerId,
+                ativo: true,
+            },
         });
-        if (!lead)
-            throw new common_1.NotFoundException('Lead não encontrado');
-        if (lead.interesse.clientid !== dto.clientId) {
-            throw new common_1.ForbiddenException('Cliente não corresponde ao lead');
+        if (chatAberto) {
+            throw new common_1.ConflictException('Já existe uma conversa aberta entre você e este cliente para este interesse.');
         }
-        const summary = buildSummary(lead.interesse);
-        try {
-            const conversation = await this.prisma.conversa.create({
-                data: {
-                    clientid: dto.clientId,
-                    corretorid: dto.brokerId,
-                    leadid: dto.leadId,
-                    resumointeresse: summary,
-                },
-                include: {
-                    client: true,
-                    corretor: true,
-                    lead: { include: { interesse: true } },
-                    mensagens: true,
-                },
-            });
-            return this.toConversation(conversation, false);
+        if (interesse.clientid !== dto.clientId) {
+            throw new common_1.ForbiddenException('Cliente não corresponde ao interesse');
         }
-        catch (err) {
-            const code = err && typeof err === 'object' && 'code' in err ? err.code : null;
-            if (code === 'P2002') {
-                throw new common_1.ConflictException('Já existe conversa aberta para este lead e corretor');
-            }
-            throw err;
-        }
+        const summary = buildSummary(interesse).slice(0, 512);
+        const conversation = await this.prisma.conversa.create({
+            data: {
+                clientid: dto.clientId,
+                corretorid: dto.brokerId,
+                interesseimovelid: dto.interesseImovelId,
+                resumointeresse: summary,
+            },
+            include: {
+                client: true,
+                corretor: true,
+                interesseimovel: { include: { tipoimovel: true } },
+                mensagens: true,
+            },
+        });
+        return this.toConversation(conversation, false);
     }
     async encerrar(conversationId, clientId) {
         const conv = await this.prisma.conversa.findUnique({
@@ -121,7 +122,7 @@ let ConversationsService = class ConversationsService {
             include: {
                 client: true,
                 corretor: true,
-                lead: { include: { interesse: { include: { tipoimovel: true } } } },
+                interesseimovel: { include: { tipoimovel: true } },
                 mensagens: { orderBy: { criadoem: 'desc' }, take: 1 },
             },
         });
@@ -137,7 +138,7 @@ let ConversationsService = class ConversationsService {
             include: {
                 client: true,
                 corretor: true,
-                lead: { include: { interesse: { include: { tipoimovel: true } } } },
+                interesseimovel: { include: { tipoimovel: true } },
                 mensagens: { orderBy: { criadoem: 'desc' }, take: 1 },
             },
         });
@@ -188,7 +189,8 @@ let ConversationsService = class ConversationsService {
             brokerId: c.corretorid,
             brokerName: c.corretor.nome,
             brokerAvatar: c.corretor.avatar,
-            leadId: c.leadid,
+            leadId: c.interesseimovelid,
+            interesseImovelId: c.interesseimovelid,
             propertyInterest: c.resumointeresse,
             messages: withMessages
                 ? c.mensagens.map((m) => ({

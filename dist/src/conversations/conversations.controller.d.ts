@@ -14,6 +14,7 @@ export declare class ConversationsController {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;
@@ -42,6 +43,7 @@ export declare class ConversationsController {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;
@@ -70,6 +72,7 @@ export declare class ConversationsController {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;
@@ -106,6 +109,7 @@ export declare class ConversationsController {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;

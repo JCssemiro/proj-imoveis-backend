@@ -4,14 +4,12 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterClientDto, RegisterBrokerDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('Autenticação')
 @Controller('auth')
 export class AuthController {
   constructor(private auth: AuthService) {}
 
-  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login (cliente ou corretor)' })
@@ -20,7 +18,6 @@ export class AuthController {
     return this.auth.login(dto);
   }
 
-  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registro (cliente ou corretor)' })
   @ApiResponse({ status: 201, description: 'Usuário criado' })
@@ -31,7 +28,6 @@ export class AuthController {
     return this.auth.registerClient(dto as RegisterClientDto);
   }
 
-  @Public()
   @Post('recuperar-senha')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Solicitar recuperação de senha' })

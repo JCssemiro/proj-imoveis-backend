@@ -1,5 +1,5 @@
 export declare class CreateConversationDto {
-    leadId: string;
+    interesseImovelId: string;
     clientId: string;
     brokerId: string;
 }

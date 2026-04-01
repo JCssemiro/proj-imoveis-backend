@@ -25,32 +25,32 @@ export class LeadsController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar leads do corretor (paginado)',
+    summary: 'Listar leads (interesses) paginado',
     description:
-      'Filtros por interesse e data. Use IDs de GET /parametros para tipoImovelId, finalidadeId, tipoCasaId, mobiliaId. status: new | contacted | in_progress | closed. dataInicio/dataFim: ISO 8601.',
+      'O id do lead é o UUID do interesse. Filtro status: 1–4 (1=novo … 4=encerrado); sem status, exclui encerrados. Demais filtros: códigos de GET /parametros. compraOuAluguel: compra|aluguel.',
   })
   @ApiQuery({ name: 'pagina', required: false })
   @ApiQuery({ name: 'tamanho', required: false })
-  @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'tipoImovelId', required: false })
-  @ApiQuery({ name: 'finalidadeId', required: false })
-  @ApiQuery({ name: 'tipoCasaId', required: false })
-  @ApiQuery({ name: 'mobiliaId', required: false })
+  @ApiQuery({ name: 'status', required: false, description: '1–4 (opcional; padrão lista sem status 4)' })
+  @ApiQuery({ name: 'tipoImovelCodigo', required: false })
+  @ApiQuery({ name: 'finalidadeContratacaoCodigo', required: false })
+  @ApiQuery({ name: 'finalidadeUsoCodigo', required: false })
+  @ApiQuery({ name: 'mobiliaCodigo', required: false })
   @ApiQuery({ name: 'compraOuAluguel', required: false, enum: ['compra', 'aluguel'] })
   @ApiQuery({ name: 'regiao', required: false })
   @ApiQuery({ name: 'minPrice', required: false })
   @ApiQuery({ name: 'maxPrice', required: false })
-  @ApiQuery({ name: 'dataInicio', required: false, description: 'Data mínima criação do lead (ISO 8601)' })
-  @ApiQuery({ name: 'dataFim', required: false, description: 'Data máxima criação do lead (ISO 8601)' })
+  @ApiQuery({ name: 'dataInicio', required: false, description: 'ISO 8601' })
+  @ApiQuery({ name: 'dataFim', required: false, description: 'ISO 8601' })
   findAll(
     @CurrentUser('sub') _brokerId: string,
     @Query('pagina') pagina?: string,
     @Query('tamanho') tamanho?: string,
     @Query('status') status?: string,
-    @Query('tipoImovelId') tipoImovelId?: string,
-    @Query('finalidadeId') finalidadeId?: string,
-    @Query('tipoCasaId') tipoCasaId?: string,
-    @Query('mobiliaId') mobiliaId?: string,
+    @Query('tipoImovelCodigo') tipoImovelCodigo?: string,
+    @Query('finalidadeContratacaoCodigo') finalidadeContratacaoCodigo?: string,
+    @Query('finalidadeUsoCodigo') finalidadeUsoCodigo?: string,
+    @Query('mobiliaCodigo') mobiliaCodigo?: string,
     @Query('compraOuAluguel') compraOuAluguel?: string,
     @Query('regiao') regiao?: string,
     @Query('minPrice') minPrice?: string,
@@ -62,10 +62,10 @@ export class LeadsController {
       _brokerId,
       {
         status,
-        tipoImovelId,
-        finalidadeId,
-        tipoCasaId,
-        mobiliaId,
+        tipoImovelCodigo,
+        finalidadeContratacaoCodigo,
+        finalidadeUsoCodigo,
+        mobiliaCodigo,
         compraOuAluguel,
         regiao,
         minPrice: minPrice ? parseInt(minPrice, 10) : undefined,
@@ -78,18 +78,18 @@ export class LeadsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Buscar lead por ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.leads.findOne(id);
+  @ApiOperation({ summary: 'Buscar lead (interesse) por UUID' })
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('sub') _brokerId: string) {
+    return this.leads.findOne(id, _brokerId);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar status do lead' })
+  @ApiOperation({ summary: 'Atualizar status do lead (1–4)' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateLeadDto,
-    @CurrentUser('sub') brokerId: string,
+    @CurrentUser('sub') _brokerId: string,
   ) {
-    return this.leads.update(id, dto, brokerId);
+    return this.leads.update(id, dto, _brokerId);
   }
 }

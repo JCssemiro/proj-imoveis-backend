@@ -12,17 +12,37 @@ export class LocalizacaoInteresseDto {
   })
   cep?: string;
 
-  @ApiPropertyOptional({ description: 'Código IBGE do município (até 7 dígitos)' })
+  @ApiPropertyOptional({ description: 'Logradouro' })
   @IsOptional()
-  @ValidateIf((_, v) => v != null && v !== '')
   @IsString()
-  @MaxLength(7)
-  @Matches(/^\d{1,7}$/, { message: 'Código IBGE deve conter apenas dígitos' })
-  municipiocodibge?: string;
+  @MaxLength(255)
+  logradouro?: string;
 
   @ApiPropertyOptional({ description: 'Bairro' })
   @IsOptional()
   @IsString()
-  @MaxLength(200)
+  @MaxLength(120)
   bairro?: string;
+
+  @ApiPropertyOptional({ description: 'Cidade' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  cidade?: string;
+
+  @ApiPropertyOptional({ description: 'UF (2 letras)' })
+  @IsOptional()
+  @ValidateIf((_, v) => v != null && v !== '')
+  @IsString()
+  @MaxLength(2)
+  @Matches(/^[A-Za-z]{2}$/, { message: 'UF deve ter 2 letras' })
+  uf?: string;
+
+  @ApiPropertyOptional({ description: 'Código IBGE da cidade (até 7 dígitos)' })
+  @IsOptional()
+  @ValidateIf((_, v) => v != null && v !== '')
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^\d{1,10}$/, { message: 'Código IBGE deve conter apenas dígitos' })
+  codIbgeCidade?: string;
 }

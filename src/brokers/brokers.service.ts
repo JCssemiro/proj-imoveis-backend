@@ -16,7 +16,7 @@ export class BrokersService {
         where,
         orderBy: { nome: 'asc' },
         include: {
-          _count: { select: { leadsAsBroker: true } },
+          _count: { select: { conversationsAsBroker: true } },
         },
         skip,
         take: size,
@@ -31,7 +31,7 @@ export class BrokersService {
       avatar: b.avatar,
       specialties: [] as string[],
       rating: 0,
-      totalLeads: b._count.leadsAsBroker,
+      totalConversas: b._count.conversationsAsBroker,
     }));
     return buildPaginatedResponse(page, size, total, conteudo);
   }

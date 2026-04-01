@@ -18,7 +18,6 @@ const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 const forgot_password_dto_1 = require("./dto/forgot-password.dto");
-const public_decorator_1 = require("../common/decorators/public.decorator");
 let AuthController = class AuthController {
     constructor(auth) {
         this.auth = auth;
@@ -38,7 +37,6 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, public_decorator_1.Public)(),
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Login (cliente ou corretor)' }),
@@ -49,7 +47,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, public_decorator_1.Public)(),
     (0, common_1.Post)('register'),
     (0, swagger_1.ApiOperation)({ summary: 'Registro (cliente ou corretor)' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Usuário criado' }),
@@ -59,7 +56,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
 __decorate([
-    (0, public_decorator_1.Public)(),
     (0, common_1.Post)('recuperar-senha'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Solicitar recuperação de senha' }),

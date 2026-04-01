@@ -11,13 +11,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChangeBrokerPlanDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class ChangeBrokerPlanDto {
 }
 exports.ChangeBrokerPlanDto = ChangeBrokerPlanDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'UUID do plano (GET /api/v1/parametros/plano)', example: 'uuid' }),
-    (0, class_validator_1.IsUUID)('4'),
-    __metadata("design:type", String)
-], ChangeBrokerPlanDto.prototype, "planoId", void 0);
+    (0, swagger_1.ApiProperty)({
+        description: 'Código do plano retornado por GET /parametros/plano',
+        example: 2,
+    }),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], ChangeBrokerPlanDto.prototype, "planoCodigo", void 0);
 //# sourceMappingURL=change-broker-plan.dto.js.map

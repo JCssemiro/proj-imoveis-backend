@@ -35,6 +35,9 @@ let InterestsController = class InterestsController {
     create(clientId, dto) {
         return this.interests.create(clientId, dto);
     }
+    fecharLead(id, clientId) {
+        return this.interests.fecharLead(id, clientId);
+    }
     update(id, clientId, dto) {
         return this.interests.update(id, clientId, dto);
     }
@@ -70,7 +73,7 @@ __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Criar interesse de imóvel',
-        description: 'Envie IDs (UUID) retornados por GET /parametros: finalidadeId, tipoImovelId, tipoCasaId (opcional), mobiliaId (opcional), featureIds (array). compraOuAluguel: "compra" ou "aluguel".',
+        description: 'Códigos de GET /parametros: finalidadeContratacaoCodigo, finalidadeUsoCodigo, tipoImovelCodigo (deve bater com finalidadeUsoCodigo), mobiliaCodigo, urgenciaCodigo. aceitaFinanciamento (boolean). quartos e suites: arrays de inteiros (quantidades aceitas).',
     }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __param(1, (0, common_1.Body)()),
@@ -78,6 +81,18 @@ __decorate([
     __metadata("design:paramtypes", [String, create_interest_dto_1.CreateInterestDto]),
     __metadata("design:returntype", void 0)
 ], InterestsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Patch)(':id/fechar'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Encerrar lead (interesse)',
+        description: 'Define status closed no interesse. Corretores não abrem novas conversas. DELETE /interesse/:id remove interesse e conversas (cascade).',
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], InterestsController.prototype, "fecharLead", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Atualizar interesse' }),
@@ -91,7 +106,10 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
-    (0, swagger_1.ApiOperation)({ summary: 'Remover interesse' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Excluir interesse',
+        description: 'Remove o interesse no banco. Em cascata: conversas e mensagens vinculadas a esse interesse.',
+    }),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),

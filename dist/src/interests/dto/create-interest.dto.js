@@ -14,14 +14,14 @@ const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const localizacao_interesse_dto_1 = require("./localizacao-interesse.dto");
+const MAX_CODIGO = 2147483647;
 class CreateInterestDto {
 }
 exports.CreateInterestDto = CreateInterestDto;
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'Localizações de interesse (CEP, município cod IBGE, bairro)',
+        description: 'Localizações',
         type: [localizacao_interesse_dto_1.LocalizacaoInteresseDto],
-        example: [{ cep: '01310100', bairro: 'Bela Vista' }, { municipiocodibge: '3550308' }],
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
@@ -30,84 +30,91 @@ __decorate([
     __metadata("design:type", Array)
 ], CreateInterestDto.prototype, "localizacoes", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Compra ou aluguel. Valores: compra | aluguel (obter de GET /parametros/compraoualuguel)',
-        enum: ['compra', 'aluguel'],
-    }),
-    (0, class_validator_1.IsIn)(['compra', 'aluguel']),
-    __metadata("design:type", String)
-], CreateInterestDto.prototype, "compraOuAluguel", void 0);
+    (0, swagger_1.ApiProperty)({ description: 'Código em GET /parametros/finalidadecontratacao', example: 1 }),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(MAX_CODIGO),
+    __metadata("design:type", Number)
+], CreateInterestDto.prototype, "finalidadeContratacaoCodigo", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'ID da finalidade (obter de GET /parametros/finalidade)',
-        example: 'uuid',
-    }),
-    (0, class_validator_1.IsUUID)('4'),
-    __metadata("design:type", String)
-], CreateInterestDto.prototype, "finalidadeId", void 0);
+    (0, swagger_1.ApiProperty)({ description: 'Código em GET /parametros/finalidadeuso', example: 1 }),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(MAX_CODIGO),
+    __metadata("design:type", Number)
+], CreateInterestDto.prototype, "finalidadeUsoCodigo", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'ID do tipo de imóvel (obter de GET /parametros/tipoimovel)',
-        example: 'uuid',
-    }),
-    (0, class_validator_1.IsUUID)('4'),
-    __metadata("design:type", String)
-], CreateInterestDto.prototype, "tipoImovelId", void 0);
+    (0, swagger_1.ApiProperty)({ description: 'Código em GET /parametros/tipoimovel (mesmo finalidadeUsoCodigo)', example: 1 }),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(MAX_CODIGO),
+    __metadata("design:type", Number)
+], CreateInterestDto.prototype, "tipoImovelCodigo", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Código em GET /parametros/mobilia', example: 1 }),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(MAX_CODIGO),
+    __metadata("design:type", Number)
+], CreateInterestDto.prototype, "mobiliaCodigo", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Código em GET /parametros/urgencia', example: 1 }),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(MAX_CODIGO),
+    __metadata("design:type", Number)
+], CreateInterestDto.prototype, "urgenciaCodigo", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Aceita financiamento' }),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateInterestDto.prototype, "aceitaFinanciamento", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'ID do tipo de casa (obter de GET /parametros/tipocasa). Se omitido, usa o primeiro ativo por ordem.',
+        description: 'Quantidades de quartos aceitas (ex.: [1,2] para 1 ou 2 quartos)',
+        type: [Number],
+        example: [1, 2],
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)('4'),
-    __metadata("design:type", String)
-], CreateInterestDto.prototype, "tipoCasaId", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Quantidade de quartos (ex: 2, 6+)' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsArray)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)({}, { each: true }),
+    (0, class_validator_1.Min)(0, { each: true }),
+    (0, class_validator_1.Max)(50, { each: true }),
+    (0, class_validator_1.ArrayMaxSize)(30),
+    __metadata("design:type", Array)
 ], CreateInterestDto.prototype, "quartos", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Quantidade de suítes (ex: 1, 4+)' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", Object)
-], CreateInterestDto.prototype, "suites", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", Object)
-], CreateInterestDto.prototype, "banheiros", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", Object)
-], CreateInterestDto.prototype, "garagens", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", Object)
-], CreateInterestDto.prototype, "metragemTerreno", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateInterestDto.prototype, "areaConstruida", void 0);
-__decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'ID da mobília (obter de GET /parametros/mobilia). Se omitido, usa o primeiro ativo por ordem.',
+        description: 'Quantidades de suítes aceitas',
+        type: [Number],
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)('4'),
-    __metadata("design:type", String)
-], CreateInterestDto.prototype, "mobiliaId", void 0);
+    (0, class_validator_1.IsArray)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)({}, { each: true }),
+    (0, class_validator_1.Min)(0, { each: true }),
+    (0, class_validator_1.Max)(50, { each: true }),
+    (0, class_validator_1.ArrayMaxSize)(30),
+    __metadata("design:type", Array)
+], CreateInterestDto.prototype, "suites", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Metragem (m²)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Object)
+], CreateInterestDto.prototype, "metragem", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ minimum: 0 }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Object)
@@ -115,21 +122,11 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ minimum: 0 }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Object)
 ], CreateInterestDto.prototype, "valorMaximo", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'IDs das features (obter de GET /parametros/feature). Array de UUID.',
-        type: [String],
-        example: ['uuid1', 'uuid2'],
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsUUID)('4', { each: true }),
-    __metadata("design:type", Array)
-], CreateInterestDto.prototype, "featureIds", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ maxLength: 5000 }),
     (0, class_validator_1.IsOptional)(),

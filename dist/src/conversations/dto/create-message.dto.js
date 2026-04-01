@@ -16,15 +16,17 @@ class CreateMessageDto {
 }
 exports.CreateMessageDto = CreateMessageDto;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ maxLength: 4000 }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(1, { message: 'Conteúdo da mensagem não pode ser vazio' }),
+    (0, class_validator_1.MaxLength)(4000),
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "content", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ nullable: true }),
+    (0, swagger_1.ApiPropertyOptional)({ nullable: true, maxLength: 2048 }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUrl)(),
+    (0, class_validator_1.IsUrl)({ require_tld: false }),
+    (0, class_validator_1.MaxLength)(2048),
     __metadata("design:type", Object)
 ], CreateMessageDto.prototype, "imageUrl", void 0);
 //# sourceMappingURL=create-message.dto.js.map

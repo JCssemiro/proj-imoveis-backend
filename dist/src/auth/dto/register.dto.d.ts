@@ -12,6 +12,7 @@ export declare class RegisterBrokerDto {
     creci: string;
     password: string;
     type: 'broker';
+    planoCodigo?: number;
     subscriptionActive?: boolean;
 }
 export type RegisterDto = RegisterClientDto | RegisterBrokerDto;

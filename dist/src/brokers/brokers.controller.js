@@ -16,7 +16,6 @@ exports.BrokersController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const brokers_service_1 = require("./brokers.service");
-const public_decorator_1 = require("../common/decorators/public.decorator");
 let BrokersController = class BrokersController {
     constructor(brokers) {
         this.brokers = brokers;
@@ -27,9 +26,8 @@ let BrokersController = class BrokersController {
 };
 exports.BrokersController = BrokersController;
 __decorate([
-    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Listar corretores (público, paginado)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Listar corretores (paginado; requer autenticação)' }),
     (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
     __param(0, (0, common_1.Query)('pagina')),
@@ -40,6 +38,7 @@ __decorate([
 ], BrokersController.prototype, "findAll", null);
 exports.BrokersController = BrokersController = __decorate([
     (0, swagger_1.ApiTags)('Corretor'),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.Controller)('corretor'),
     __metadata("design:paramtypes", [brokers_service_1.BrokersService])
 ], BrokersController);

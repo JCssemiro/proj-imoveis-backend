@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, IsIn, IsOptional, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail, IsString, MinLength, IsIn, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
 
 export class RegisterClientDto {
   @ApiProperty()
@@ -54,6 +55,16 @@ export class RegisterBrokerDto {
   @ApiProperty({ enum: ['broker'] })
   @IsIn(['broker'])
   type: 'broker';
+
+  @ApiPropertyOptional({
+    description: 'Código do plano (GET /parametros/plano). Padrão: 2.',
+    example: 2,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  planoCodigo?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

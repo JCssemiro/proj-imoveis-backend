@@ -14,6 +14,24 @@ const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const core_1 = require("@nestjs/core");
 const public_decorator_1 = require("../decorators/public.decorator");
+const PUBLIC_GET_PATHS = new Set(['/api/v1/health', '/api/v1/docs', '/api/v1/docs-json']);
+const PUBLIC_AUTH_POST_PATHS = new Set([
+    '/api/v1/auth/login',
+    '/api/v1/auth/register',
+    '/api/v1/auth/recuperar-senha',
+]);
+function normalizeRequestPath(raw) {
+    const withoutQuery = raw.split('?')[0] || '/';
+    let pathname = withoutQuery;
+    try {
+        if (withoutQuery.includes('://'))
+            pathname = new URL(withoutQuery).pathname;
+    }
+    catch {
+    }
+    const lower = pathname.toLowerCase();
+    return lower.length > 1 && lower.endsWith('/') ? lower.slice(0, -1) : lower;
+}
 let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
     constructor(reflector) {
         super();
@@ -27,20 +45,12 @@ let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
         if (isPublic)
             return true;
         const request = context.switchToHttp().getRequest();
-        const rawPath = request.url ??
-            request.raw?.url ??
-            request.routerPath ??
-            request.path ??
-            request.pathname ??
-            '';
-        const path = rawPath.toString().split('?')[0].toLowerCase();
-        const isHealth = path === '/api/v1/health' ||
-            path.endsWith('/health') ||
-            path.includes('health');
-        const isDocs = path.startsWith('/api/v1/docs') ||
-            path.includes('/docs') ||
-            path.includes('docs');
-        if (isHealth || isDocs)
+        const method = (request.method || 'GET').toUpperCase();
+        const rawPath = request.url ?? request.raw?.url ?? request.routerPath ?? request.path ?? '';
+        const path = normalizeRequestPath(String(rawPath));
+        if (method === 'GET' && PUBLIC_GET_PATHS.has(path))
+            return true;
+        if (method === 'POST' && PUBLIC_AUTH_POST_PATHS.has(path))
             return true;
         return super.canActivate(context);
     }

@@ -1,68 +1,49 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 export interface ParametroItem {
-    id: string;
-    codigo: string;
-    label: string;
-    ordem: number;
+    codigo: number;
+    nome: string;
+}
+export interface TipoImovelParametro extends ParametroItem {
+    finalidadeUsoCodigo: number;
+}
+export interface PlanoParametro extends ParametroItem {
+    precoMensal: number;
 }
 export declare class ParametrosService {
     private prisma;
     constructor(prisma: PrismaService);
-    getFinalidades(): Promise<ParametroItem[]>;
-    getFinalidadesPaginado(pagination: {
+    private paginateParam;
+    getFinalidadeUsoPaginado(pagination: {
         pagina?: number | string;
         tamanho?: number | string;
     }): Promise<PaginatedResponseDto<ParametroItem>>;
-    getTiposImovel(): Promise<ParametroItem[]>;
+    getFinalidadeContratacaoPaginado(pagination: {
+        pagina?: number | string;
+        tamanho?: number | string;
+    }): Promise<PaginatedResponseDto<ParametroItem>>;
     getTiposImovelPaginado(pagination: {
         pagina?: number | string;
         tamanho?: number | string;
-    }): Promise<PaginatedResponseDto<ParametroItem>>;
-    getTiposCasa(): Promise<ParametroItem[]>;
-    getTiposCasaPaginado(pagination: {
-        pagina?: number | string;
-        tamanho?: number | string;
-    }): Promise<PaginatedResponseDto<ParametroItem>>;
-    getMobilias(): Promise<ParametroItem[]>;
+    }): Promise<PaginatedResponseDto<TipoImovelParametro>>;
     getMobiliasPaginado(pagination: {
         pagina?: number | string;
         tamanho?: number | string;
     }): Promise<PaginatedResponseDto<ParametroItem>>;
-    getFeatures(): Promise<ParametroItem[]>;
-    getFeaturesPaginado(pagination: {
+    getUrgenciaPaginado(pagination: {
         pagina?: number | string;
         tamanho?: number | string;
     }): Promise<PaginatedResponseDto<ParametroItem>>;
-    getPlanos(): Promise<ParametroItem[]>;
     getPlanosPaginado(pagination: {
         pagina?: number | string;
         tamanho?: number | string;
-    }): Promise<PaginatedResponseDto<ParametroItem>>;
-    getCompraOuAluguel(): {
-        valor: string;
-        label: string;
-        ordem: number;
-    }[];
-    getCompraOuAluguelPaginado(pagination: {
-        pagina?: number | string;
-        tamanho?: number | string;
-    }): Promise<PaginatedResponseDto<{
-        valor: string;
-        label: string;
-        ordem: number;
-    }>>;
+    }): Promise<PaginatedResponseDto<PlanoParametro>>;
     getAll(): Promise<{
-        finalidade: ParametroItem[];
-        tipoimovel: ParametroItem[];
-        tipocasa: ParametroItem[];
+        finalidadeuso: ParametroItem[];
+        finalidadecontratacao: ParametroItem[];
+        tipoimovel: TipoImovelParametro[];
         mobilia: ParametroItem[];
-        feature: ParametroItem[];
-        plano: ParametroItem[];
-        compraoualuguel: {
-            valor: string;
-            label: string;
-            ordem: number;
-        }[];
+        urgencia: ParametroItem[];
+        plano: PlanoParametro[];
     }>;
 }

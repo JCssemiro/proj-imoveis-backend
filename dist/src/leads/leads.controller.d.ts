@@ -3,7 +3,7 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 export declare class LeadsController {
     private leads;
     constructor(leads: LeadsService);
-    findAll(_brokerId: string, pagina?: string, tamanho?: string, status?: string, tipoImovelId?: string, finalidadeId?: string, tipoCasaId?: string, mobiliaId?: string, compraOuAluguel?: string, regiao?: string, minPrice?: string, maxPrice?: string, dataInicio?: string, dataFim?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
+    findAll(_brokerId: string, pagina?: string, tamanho?: string, status?: string, tipoImovelCodigo?: string, finalidadeContratacaoCodigo?: string, finalidadeUsoCodigo?: string, mobiliaCodigo?: string, compraOuAluguel?: string, regiao?: string, minPrice?: string, maxPrice?: string, dataInicio?: string, dataFim?: string): Promise<import("../common/dto/paginated-response.dto").PaginatedResponseDto<{
         id: string;
         interest: {
             id: string;
@@ -12,27 +12,25 @@ export declare class LeadsController {
             clientPhone: string;
             clientEmail: string;
             locations: string[];
-            compraOuAluguel: string;
-            finalidade: string;
+            finalidadeContratacao: string;
+            finalidadeUso: string;
             tipoImovel: string;
-            tipoCasa: string;
-            quartos: string;
-            suites: string;
-            metragemTerreno: string;
-            areaConstruida: string;
             mobilia: string;
+            urgencia: string;
+            aceitaFinanciamento: boolean;
+            quartos: number[];
+            suites: number[];
+            metragem: number | null;
             minPrice: number;
             maxPrice: number;
-            features: string[];
             notes: string;
+            status: number;
             createdAt: string;
             isActive: boolean;
         };
-        brokerId: string | null;
-        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>>;
-    findOne(id: string): Promise<{
+    findOne(id: string, _brokerId: string): Promise<{
         id: string;
         interest: {
             id: string;
@@ -41,27 +39,25 @@ export declare class LeadsController {
             clientPhone: string;
             clientEmail: string;
             locations: string[];
-            compraOuAluguel: string;
-            finalidade: string;
+            finalidadeContratacao: string;
+            finalidadeUso: string;
             tipoImovel: string;
-            tipoCasa: string;
-            quartos: string;
-            suites: string;
-            metragemTerreno: string;
-            areaConstruida: string;
             mobilia: string;
+            urgencia: string;
+            aceitaFinanciamento: boolean;
+            quartos: number[];
+            suites: number[];
+            metragem: number | null;
             minPrice: number;
             maxPrice: number;
-            features: string[];
             notes: string;
+            status: number;
             createdAt: string;
             isActive: boolean;
         };
-        brokerId: string | null;
-        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>;
-    update(id: string, dto: UpdateLeadDto, brokerId: string): Promise<{
+    update(id: string, dto: UpdateLeadDto, _brokerId: string): Promise<{
         id: string;
         interest: {
             id: string;
@@ -70,24 +66,22 @@ export declare class LeadsController {
             clientPhone: string;
             clientEmail: string;
             locations: string[];
-            compraOuAluguel: string;
-            finalidade: string;
+            finalidadeContratacao: string;
+            finalidadeUso: string;
             tipoImovel: string;
-            tipoCasa: string;
-            quartos: string;
-            suites: string;
-            metragemTerreno: string;
-            areaConstruida: string;
             mobilia: string;
+            urgencia: string;
+            aceitaFinanciamento: boolean;
+            quartos: number[];
+            suites: number[];
+            metragem: number | null;
             minPrice: number;
             maxPrice: number;
-            features: string[];
             notes: string;
+            status: number;
             createdAt: string;
             isActive: boolean;
         };
-        brokerId: string | null;
-        status: import(".prisma/client").$Enums.statuslead;
         createdAt: string;
     }>;
 }

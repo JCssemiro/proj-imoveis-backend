@@ -68,7 +68,10 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('broker'),
-    (0, swagger_1.ApiOperation)({ summary: 'Criar conversa (corretor)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Criar conversa (corretor)',
+        description: 'Outro corretor pode abrir conversa sobre o mesmo lead (interesse); o conflito 409 só ocorre se você já tiver uma conversa ativa com este cliente neste interesse.',
+    }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),

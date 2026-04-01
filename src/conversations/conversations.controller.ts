@@ -47,7 +47,11 @@ export class ConversationsController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(RolesGuard)
   @Roles('broker')
-  @ApiOperation({ summary: 'Criar conversa (corretor)' })
+  @ApiOperation({
+    summary: 'Criar conversa (corretor)',
+    description:
+      'Outro corretor pode abrir conversa sobre o mesmo lead (interesse); o conflito 409 só ocorre se você já tiver uma conversa ativa com este cliente neste interesse.',
+  })
   create(
     @Body() dto: CreateConversationDto,
     @CurrentUser('sub') brokerId: string,

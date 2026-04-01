@@ -16,6 +16,7 @@ const bcrypt = require("bcrypt");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const crypto_1 = require("crypto");
+const decimal_1 = require("../common/utils/decimal");
 const SALT_ROUNDS = 10;
 let AuthService = class AuthService {
     constructor(prisma, jwt) {
@@ -23,7 +24,10 @@ let AuthService = class AuthService {
         this.jwt = jwt;
     }
     async login(dto) {
-        const user = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
+        const user = await this.prisma.usuario.findUnique({
+            where: { email: dto.email },
+            include: { plano: true },
+        });
         if (!user || user.tipo !== dto.type) {
             throw new common_1.UnauthorizedException('E-mail ou senha inválidos');
         }
@@ -37,7 +41,7 @@ let AuthService = class AuthService {
         if (existing)
             throw new common_1.ConflictException('E-mail já cadastrado');
         const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-        const user = await this.prisma.usuario.create({
+        const created = await this.prisma.usuario.create({
             data: {
                 nome: dto.name,
                 email: dto.email,
@@ -45,6 +49,10 @@ let AuthService = class AuthService {
                 senhahash: passwordHash,
                 tipo: client_1.tipousuario.client,
             },
+        });
+        const user = await this.prisma.usuario.findUniqueOrThrow({
+            where: { id: created.id },
+            include: { plano: true },
         });
         return this.buildAuthResponse(user);
     }
@@ -55,8 +63,12 @@ let AuthService = class AuthService {
         const existingCreci = await this.prisma.usuario.findFirst({ where: { creci: dto.creci } });
         if (existingCreci)
             throw new common_1.ConflictException('CRECI já cadastrado');
+        const planoCodigo = dto.planoCodigo ?? 2;
+        const planOk = await this.prisma.plano.findFirst({ where: { codigo: planoCodigo, ativo: true } });
+        if (!planOk)
+            throw new common_1.BadRequestException('planoCodigo inválido para cadastro de corretor');
         const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-        const user = await this.prisma.usuario.create({
+        const created = await this.prisma.usuario.create({
             data: {
                 nome: dto.name,
                 email: dto.email,
@@ -65,7 +77,12 @@ let AuthService = class AuthService {
                 senhahash: passwordHash,
                 tipo: client_1.tipousuario.broker,
                 ativoassinatura: dto.subscriptionActive ?? true,
+                planocodigo: planoCodigo,
             },
+        });
+        const user = await this.prisma.usuario.findUniqueOrThrow({
+            where: { id: created.id },
+            include: { plano: true },
         });
         return this.buildAuthResponse(user);
     }
@@ -82,6 +99,13 @@ let AuthService = class AuthService {
     }
     buildAuthResponse(user) {
         const token = this.jwt.sign({ sub: user.id, email: user.email, type: user.tipo }, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+        const plan = user.plano
+            ? {
+                codigo: user.plano.codigo,
+                nome: user.plano.nome,
+                precoMensal: (0, decimal_1.decimalToNumber)(user.plano.precomensal),
+            }
+            : null;
         return {
             user: {
                 id: user.id,
@@ -92,6 +116,7 @@ let AuthService = class AuthService {
                 avatar: user.avatar,
                 creci: user.creci,
                 subscriptionActive: user.ativoassinatura,
+                plan,
             },
             token,
         };

@@ -1,14 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsUrl, MinLength } from 'class-validator';
+import { IsString, IsOptional, IsUrl, MinLength, MaxLength } from 'class-validator';
 
 export class CreateMessageDto {
-  @ApiProperty()
+  @ApiProperty({ maxLength: 4000 })
   @IsString()
   @MinLength(1, { message: 'Conteúdo da mensagem não pode ser vazio' })
+  @MaxLength(4000)
   content: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ nullable: true, maxLength: 2048 })
   @IsOptional()
-  @IsUrl()
+  @IsUrl({ require_tld: false })
+  @MaxLength(2048)
   imageUrl?: string | null;
 }

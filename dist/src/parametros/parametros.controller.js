@@ -24,26 +24,23 @@ let ParametrosController = class ParametrosController {
     async getAll() {
         return this.parametros.getAll();
     }
-    async getFinalidades(pagina, tamanho) {
-        return this.parametros.getFinalidadesPaginado({ pagina, tamanho });
+    getFinalidadeUso(pagina, tamanho) {
+        return this.parametros.getFinalidadeUsoPaginado({ pagina, tamanho });
     }
-    async getTiposImovel(pagina, tamanho) {
+    getFinalidadeContratacao(pagina, tamanho) {
+        return this.parametros.getFinalidadeContratacaoPaginado({ pagina, tamanho });
+    }
+    getTiposImovel(pagina, tamanho) {
         return this.parametros.getTiposImovelPaginado({ pagina, tamanho });
     }
-    async getTiposCasa(pagina, tamanho) {
-        return this.parametros.getTiposCasaPaginado({ pagina, tamanho });
-    }
-    async getMobilias(pagina, tamanho) {
+    getMobilias(pagina, tamanho) {
         return this.parametros.getMobiliasPaginado({ pagina, tamanho });
     }
-    async getFeatures(pagina, tamanho) {
-        return this.parametros.getFeaturesPaginado({ pagina, tamanho });
+    getUrgencia(pagina, tamanho) {
+        return this.parametros.getUrgenciaPaginado({ pagina, tamanho });
     }
-    async getPlanos(pagina, tamanho) {
+    getPlanos(pagina, tamanho) {
         return this.parametros.getPlanosPaginado({ pagina, tamanho });
-    }
-    getCompraOuAluguel(pagina, tamanho) {
-        return this.parametros.getCompraOuAluguelPaginado({ pagina, tamanho });
     }
 };
 exports.ParametrosController = ParametrosController;
@@ -51,114 +48,88 @@ __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Listar todos os parâmetros',
-        description: 'Retorna todos os parâmetros em uma chamada. Nos payloads de interesse use o campo "id" (UUID) para finalidadeId, tipoImovelId, tipoCasaId, mobiliaId e featureIds. compraOuAluguel usa "valor" (compra|aluguel).',
+        description: 'Cada parâmetro usa `codigo` (inteiro) como chave. No interesse envie: finalidadeContratacaoCodigo, finalidadeUsoCodigo, tipoImovelCodigo, mobiliaCodigo, urgenciaCodigo, aceitaFinanciamento (boolean), quartos e suites (arrays de inteiros, ex.: quantidades aceitas).',
     }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ParametrosController.prototype, "getAll", null);
 __decorate([
-    (0, common_1.Get)('finalidade'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar finalidades',
-        description: 'Parâmetros para finalidadeId no cadastro de interesse. Enviar o "id" (UUID) no body.',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
-    __param(0, (0, common_1.Query)('pagina')),
-    __param(1, (0, common_1.Query)('tamanho')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], ParametrosController.prototype, "getFinalidades", null);
-__decorate([
-    (0, common_1.Get)('tipoimovel'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar tipos de imóvel',
-        description: 'Parâmetros para tipoImovelId no cadastro de interesse e query tipoImovelId no filtro de leads. Enviar o "id" (UUID).',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
-    __param(0, (0, common_1.Query)('pagina')),
-    __param(1, (0, common_1.Query)('tamanho')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], ParametrosController.prototype, "getTiposImovel", null);
-__decorate([
-    (0, common_1.Get)('tipocasa'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar tipos de casa',
-        description: 'Parâmetros para tipoCasaId no cadastro de interesse. Enviar o "id" (UUID).',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
-    __param(0, (0, common_1.Query)('pagina')),
-    __param(1, (0, common_1.Query)('tamanho')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], ParametrosController.prototype, "getTiposCasa", null);
-__decorate([
-    (0, common_1.Get)('mobilia'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar opções de mobília',
-        description: 'Parâmetros para mobiliaId no cadastro de interesse. Enviar o "id" (UUID).',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
-    __param(0, (0, common_1.Query)('pagina')),
-    __param(1, (0, common_1.Query)('tamanho')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], ParametrosController.prototype, "getMobilias", null);
-__decorate([
-    (0, common_1.Get)('feature'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar features (características)',
-        description: 'Parâmetros para featureIds (array de UUID) no cadastro de interesse. Enviar os "id" no array.',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
-    __param(0, (0, common_1.Query)('pagina')),
-    __param(1, (0, common_1.Query)('tamanho')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], ParametrosController.prototype, "getFeatures", null);
-__decorate([
-    (0, common_1.Get)('plano'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar planos de corretores',
-        description: 'Parâmetros para planoid no cadastro de corretor. Enviar o "id" (UUID) do plano.',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
-    __param(0, (0, common_1.Query)('pagina')),
-    __param(1, (0, common_1.Query)('tamanho')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], ParametrosController.prototype, "getPlanos", null);
-__decorate([
-    (0, common_1.Get)('compraoualuguel'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Listar opções compra/aluguel',
-        description: 'Valores fixos para compraOuAluguel no cadastro de interesse. Enviar o "valor" (compra ou aluguel).',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false, description: 'Página (padrão: 1)' }),
-    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false, description: 'Itens por página (padrão: 20)' }),
+    (0, common_1.Get)('finalidadeuso'),
+    (0, swagger_1.ApiOperation)({ summary: 'Finalidade de uso (Residencial / Comercial)' }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
     __param(0, (0, common_1.Query)('pagina')),
     __param(1, (0, common_1.Query)('tamanho')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
-], ParametrosController.prototype, "getCompraOuAluguel", null);
+], ParametrosController.prototype, "getFinalidadeUso", null);
+__decorate([
+    (0, common_1.Get)('finalidadecontratacao'),
+    (0, swagger_1.ApiOperation)({ summary: 'Compra ou Aluguel' }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
+    __param(0, (0, common_1.Query)('pagina')),
+    __param(1, (0, common_1.Query)('tamanho')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ParametrosController.prototype, "getFinalidadeContratacao", null);
+__decorate([
+    (0, common_1.Get)('tipoimovel'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Tipos de imóvel',
+        description: 'Inclui finalidadeUsoCodigo do grupo.',
+    }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
+    __param(0, (0, common_1.Query)('pagina')),
+    __param(1, (0, common_1.Query)('tamanho')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ParametrosController.prototype, "getTiposImovel", null);
+__decorate([
+    (0, common_1.Get)('mobilia'),
+    (0, swagger_1.ApiOperation)({ summary: 'Mobília' }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
+    __param(0, (0, common_1.Query)('pagina')),
+    __param(1, (0, common_1.Query)('tamanho')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ParametrosController.prototype, "getMobilias", null);
+__decorate([
+    (0, common_1.Get)('urgencia'),
+    (0, swagger_1.ApiOperation)({ summary: 'Urgência' }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
+    __param(0, (0, common_1.Query)('pagina')),
+    __param(1, (0, common_1.Query)('tamanho')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ParametrosController.prototype, "getUrgencia", null);
+__decorate([
+    (0, common_1.Get)('plano'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Planos de corretores',
+        description: 'precoMensal em reais. PATCH /usuario/plano envia planoCodigo.',
+    }),
+    (0, swagger_1.ApiQuery)({ name: 'pagina', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'tamanho', required: false }),
+    __param(0, (0, common_1.Query)('pagina')),
+    __param(1, (0, common_1.Query)('tamanho')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ParametrosController.prototype, "getPlanos", null);
 exports.ParametrosController = ParametrosController = __decorate([
     (0, swagger_1.ApiTags)('Parâmetros'),
-    (0, common_1.Controller)('parametros'),
     (0, public_decorator_1.Public)(),
+    (0, common_1.Controller)('parametros'),
     __metadata("design:paramtypes", [parametros_service_1.ParametrosService])
 ], ParametrosController);
 //# sourceMappingURL=parametros.controller.js.map

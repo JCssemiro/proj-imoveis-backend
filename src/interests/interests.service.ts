@@ -2,32 +2,30 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInterestDto } from './dto/create-interest.dto';
 import { UpdateInterestDto } from './dto/update-interest.dto';
-import { statuslead } from '@prisma/client';
-import { compraoualuguel } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { getPaginationParams } from '../common/dto/pagination-query.dto';
 import { buildPaginatedResponse } from '../common/dto/paginated-response.dto';
+import { STATUS_LEAD } from '../common/constants/status-lead';
+import { decimalToNumber } from '../common/utils/decimal';
 
 const includeRelations = {
   client: true,
-  finalidade: true,
+  finalidadecontratacao: true,
+  finalidadeuso: true,
   tipoimovel: true,
-  tipocasa: true,
   mobilia: true,
+  urgencia: true,
   localizacoes: true,
-  features: { include: { feature: true } },
-} as const;
+} as const satisfies Prisma.interesseimovelInclude;
+
+type InterestRow = Prisma.interesseimovelGetPayload<{ include: typeof includeRelations }>;
 
 const MAX_LOCALIZACOES = 50;
-const MAX_FEATURES = 30;
 const MAX_OBSERVACOES_LENGTH = 5000;
 
-function parseOptionalInt(value: string | number | null | undefined): number | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'number') return isNaN(value) ? null : value;
-  const s = String(value).trim();
-  if (s === '') return null;
-  const n = parseInt(s.replace(/\+$/, ''), 10);
-  return isNaN(n) ? null : n;
+function normalizeRoomList(arr: number[] | undefined): number[] {
+  if (!arr?.length) return [];
+  return [...new Set(arr)].sort((a, b) => a - b);
 }
 
 @Injectable()
@@ -54,8 +52,7 @@ export class InterestsService {
         take: size,
       }),
     ]);
-    const conteudo = list.map((i) => this.toPropertyInterest(i));
-    return buildPaginatedResponse(page, size, total, conteudo);
+    return buildPaginatedResponse(page, size, total, list.map((i) => this.toPropertyInterest(i)));
   }
 
   async findOne(id: string, clientid: string) {
@@ -70,18 +67,12 @@ export class InterestsService {
   }
 
   async create(clientid: string, dto: CreateInterestDto) {
-    const client = await this.prisma.usuario.findUnique({
-      where: { id: clientid },
-    });
+    const client = await this.prisma.usuario.findUnique({ where: { id: clientid } });
     if (!client) throw new NotFoundException('Cliente não encontrado');
 
     const localizacoes = dto.localizacoes ?? [];
     if (localizacoes.length > MAX_LOCALIZACOES) {
       throw new BadRequestException(`Máximo de ${MAX_LOCALIZACOES} localizações por interesse`);
-    }
-    const featureIdsInput = dto.featureIds ?? [];
-    if (featureIdsInput.length > MAX_FEATURES) {
-      throw new BadRequestException(`Máximo de ${MAX_FEATURES} características por interesse`);
     }
     const obs = dto.observacoes ?? '';
     if (obs.length > MAX_OBSERVACOES_LENGTH) {
@@ -94,63 +85,47 @@ export class InterestsService {
       throw new BadRequestException('valorMinimo não pode ser maior que valorMaximo');
     }
 
-    const compraOuAluguel = dto.compraOuAluguel as compraoualuguel;
-    if (compraOuAluguel !== 'compra' && compraOuAluguel !== 'aluguel') {
-      throw new BadRequestException('compraOuAluguel deve ser compra ou aluguel');
-    }
-
-    const [finalidade, tipoImovel, tipoCasa, mobilia] = await Promise.all([
-      this.prisma.finalidade.findFirst({ where: { id: dto.finalidadeId, ativo: true } }),
-      this.prisma.tipoimovel.findFirst({ where: { id: dto.tipoImovelId, ativo: true } }),
-      dto.tipoCasaId
-        ? this.prisma.tipocasa.findFirst({ where: { id: dto.tipoCasaId, ativo: true } })
-        : this.prisma.tipocasa.findFirst({ where: { ativo: true }, orderBy: { ordem: 'asc' } }),
-      dto.mobiliaId
-        ? this.prisma.mobilia.findFirst({ where: { id: dto.mobiliaId, ativo: true } })
-        : this.prisma.mobilia.findFirst({ where: { ativo: true }, orderBy: { ordem: 'asc' } }),
+    const [fc, fu, tipo, mob, urg] = await Promise.all([
+      this.prisma.finalidadecontratacao.findFirst({
+        where: { codigo: dto.finalidadeContratacaoCodigo, ativo: true },
+      }),
+      this.prisma.finalidadeuso.findFirst({ where: { codigo: dto.finalidadeUsoCodigo, ativo: true } }),
+      this.prisma.tipoimovel.findFirst({ where: { codigo: dto.tipoImovelCodigo, ativo: true } }),
+      this.prisma.mobilia.findFirst({ where: { codigo: dto.mobiliaCodigo, ativo: true } }),
+      this.prisma.urgencia.findFirst({ where: { codigo: dto.urgenciaCodigo, ativo: true } }),
     ]);
-    if (!finalidade || !tipoImovel || !tipoCasa || !mobilia) {
-      const missing: string[] = [];
-      if (!finalidade) missing.push('finalidadeId');
-      if (!tipoImovel) missing.push('tipoImovelId');
-      if (!tipoCasa) missing.push('tipoCasaId');
-      if (!mobilia) missing.push('mobiliaId');
+
+    if (!fc || !fu || !tipo || !mob || !urg) {
       throw new BadRequestException(
-        `Parâmetros inválidos (${missing.join(', ')}). Use IDs retornados por GET /parametros (finalidade, tipoimovel, tipocasa, mobilia).`,
+        'Um ou mais códigos de parâmetros inválidos ou inativos. Consulte GET /parametros.',
+      );
+    }
+    if (tipo.finalidadeusocodigo !== dto.finalidadeUsoCodigo) {
+      throw new BadRequestException(
+        'tipoImovelCodigo não pertence à finalidade de uso informada (finalidadeUsoCodigo).',
       );
     }
 
-    let featureIds: string[] = [];
-    if (featureIdsInput.length > 0) {
-      const features = await this.prisma.feature.findMany({
-        where: { id: { in: featureIdsInput }, ativo: true },
-      });
-      if (features.length !== featureIdsInput.length) {
-        const foundIds = new Set(features.map((f) => f.id));
-        const missingIds = featureIdsInput.filter((id) => !foundIds.has(id));
-        throw new BadRequestException(
-          `Features não encontradas ou inativas (IDs inválidos). Use IDs de GET /parametros/feature.`,
-        );
-      }
-      featureIds = featureIdsInput;
-    }
+    const quartos = normalizeRoomList(dto.quartos);
+    const suites = normalizeRoomList(dto.suites);
 
     const created = await this.prisma.$transaction(async (tx) => {
       const interesse = await tx.interesseimovel.create({
         data: {
           clientid,
-          compraoualuguel: compraOuAluguel,
-          finalidadeid: finalidade.id,
-          tipoimovelid: tipoImovel.id,
-          tipocasaid: tipoCasa.id,
-          mobiliaid: mobilia.id,
-          quartos: parseOptionalInt(dto.quartos),
-          suites: parseOptionalInt(dto.suites),
-          metragemterreno: parseOptionalInt(dto.metragemTerreno),
-          areaconstruida: parseOptionalInt(dto.areaConstruida),
+          finalidadecontratacaocodigo: fc.codigo,
+          finalidadeusocodigo: fu.codigo,
+          tipoimovelcodigo: tipo.codigo,
+          mobiliacodigo: mob.codigo,
+          urgenciacodigo: urg.codigo,
+          aceitafinanciamento: dto.aceitaFinanciamento,
+          quartos,
+          suites,
+          metragem: dto.metragem ?? null,
           minprice: dto.valorMinimo ?? 0,
           maxprice: dto.valorMaximo ?? 0,
           observacoes: obs,
+          status: STATUS_LEAD.NEW,
         },
       });
 
@@ -158,25 +133,15 @@ export class InterestsService {
         await tx.localizacaointeresse.createMany({
           data: localizacoes.map((loc) => ({
             interesseimovelid: interesse.id,
-            cep: loc.cep ?? null,
-            municipiocodibge: loc.municipiocodibge ?? null,
-            bairro: loc.bairro ?? null,
+            cep: loc.cep?.trim() || null,
+            logradouro: loc.logradouro?.trim() || null,
+            bairro: loc.bairro?.trim() || null,
+            cidade: loc.cidade?.trim() || null,
+            uf: loc.uf?.trim().toUpperCase() || null,
+            codibgecidade: loc.codIbgeCidade?.trim() || null,
           })),
         });
       }
-
-      if (featureIds.length > 0) {
-        await tx.interesseimovelfeature.createMany({
-          data: featureIds.map((featureid) => ({
-            interesseimovelid: interesse.id,
-            featureid,
-          })),
-        });
-      }
-
-      await tx.prospecto.create({
-        data: { interesseimovelid: interesse.id, status: statuslead.new },
-      });
 
       return interesse;
     });
@@ -201,78 +166,90 @@ export class InterestsService {
     if (dto.localizacoes !== undefined && dto.localizacoes.length > MAX_LOCALIZACOES) {
       throw new BadRequestException(`Máximo de ${MAX_LOCALIZACOES} localizações por interesse`);
     }
-    if (dto.featureIds !== undefined && dto.featureIds.length > MAX_FEATURES) {
-      throw new BadRequestException(`Máximo de ${MAX_FEATURES} características por interesse`);
-    }
     if (dto.observacoes !== undefined && dto.observacoes.length > MAX_OBSERVACOES_LENGTH) {
       throw new BadRequestException(`Observações com no máximo ${MAX_OBSERVACOES_LENGTH} caracteres`);
     }
 
-    // A regra de negócio permite enviar `null` para estes campos.
-    // Como a base armazena `minprice/maxprice` como INT NOT NULL (default 0),
-    // tratamos `null` como 0 (clear lógico).
-    const minP = dto.valorMinimo === null ? 0 : dto.valorMinimo ?? interest.minprice;
-    const maxP = dto.valorMaximo === null ? 0 : dto.valorMaximo ?? interest.maxprice;
+    const minP =
+      dto.valorMinimo === null
+        ? 0
+        : dto.valorMinimo !== undefined
+          ? dto.valorMinimo
+          : decimalToNumber(interest.minprice);
+    const maxP =
+      dto.valorMaximo === null
+        ? 0
+        : dto.valorMaximo !== undefined
+          ? dto.valorMaximo
+          : decimalToNumber(interest.maxprice);
     if (minP > maxP) {
       throw new BadRequestException('valorMinimo não pode ser maior que valorMaximo');
     }
 
-    const data: {
-      compraoualuguel?: compraoualuguel;
-      finalidadeid?: string;
-      tipoimovelid?: string;
-      tipocasaid?: string;
-      mobiliaid?: string;
-      quartos?: number | null;
-      suites?: number | null;
-      metragemterreno?: number | null;
-      areaconstruida?: number | null;
-      minprice?: number;
-      maxprice?: number;
-      observacoes?: string;
-    } = {
-      ...(dto.quartos !== undefined && { quartos: parseOptionalInt(dto.quartos) }),
-      ...(dto.suites !== undefined && { suites: parseOptionalInt(dto.suites) }),
-      ...(dto.metragemTerreno !== undefined && {
-        metragemterreno: parseOptionalInt(dto.metragemTerreno),
-      }),
-      ...(dto.areaConstruida !== undefined && {
-        areaconstruida: parseOptionalInt(dto.areaConstruida),
-      }),
+    const finalidadeUsoTarget = dto.finalidadeUsoCodigo ?? interest.finalidadeusocodigo;
+    const tipoImovelTarget = dto.tipoImovelCodigo ?? interest.tipoimovelcodigo;
+
+    const data: Prisma.interesseimovelUpdateInput = {
       ...(dto.valorMinimo !== undefined && { minprice: dto.valorMinimo ?? 0 }),
       ...(dto.valorMaximo !== undefined && { maxprice: dto.valorMaximo ?? 0 }),
       ...(dto.observacoes !== undefined && { observacoes: dto.observacoes }),
+      ...(dto.metragem !== undefined && { metragem: dto.metragem }),
+      ...(dto.aceitaFinanciamento !== undefined && { aceitafinanciamento: dto.aceitaFinanciamento }),
+      ...(dto.quartos !== undefined && { quartos: normalizeRoomList(dto.quartos) }),
+      ...(dto.suites !== undefined && { suites: normalizeRoomList(dto.suites) }),
     };
 
-    if (dto.compraOuAluguel !== undefined) {
-      if (dto.compraOuAluguel !== 'compra' && dto.compraOuAluguel !== 'aluguel') {
-        throw new BadRequestException('compraOuAluguel deve ser compra ou aluguel');
+    if (dto.finalidadeContratacaoCodigo !== undefined) {
+      const rec = await this.prisma.finalidadecontratacao.findFirst({
+        where: { codigo: dto.finalidadeContratacaoCodigo, ativo: true },
+      });
+      if (!rec) throw new BadRequestException('finalidadeContratacaoCodigo inválido.');
+      data.finalidadecontratacao = { connect: { codigo: rec.codigo } };
+    }
+    if (dto.finalidadeUsoCodigo !== undefined) {
+      const rec = await this.prisma.finalidadeuso.findFirst({
+        where: { codigo: dto.finalidadeUsoCodigo, ativo: true },
+      });
+      if (!rec) throw new BadRequestException('finalidadeUsoCodigo inválido.');
+      data.finalidadeuso = { connect: { codigo: rec.codigo } };
+    }
+    if (dto.tipoImovelCodigo !== undefined) {
+      const rec = await this.prisma.tipoimovel.findFirst({
+        where: { codigo: dto.tipoImovelCodigo, ativo: true },
+      });
+      if (!rec) throw new BadRequestException('tipoImovelCodigo inválido.');
+      data.tipoimovel = { connect: { codigo: rec.codigo } };
+    }
+    if (dto.mobiliaCodigo !== undefined) {
+      const rec = await this.prisma.mobilia.findFirst({
+        where: { codigo: dto.mobiliaCodigo, ativo: true },
+      });
+      if (!rec) throw new BadRequestException('mobiliaCodigo inválido.');
+      data.mobilia = { connect: { codigo: rec.codigo } };
+    }
+    if (dto.urgenciaCodigo !== undefined) {
+      const rec = await this.prisma.urgencia.findFirst({
+        where: { codigo: dto.urgenciaCodigo, ativo: true },
+      });
+      if (!rec) throw new BadRequestException('urgenciaCodigo inválido.');
+      data.urgencia = { connect: { codigo: rec.codigo } };
+    }
+
+    if (dto.tipoImovelCodigo !== undefined || dto.finalidadeUsoCodigo !== undefined) {
+      const tipo = await this.prisma.tipoimovel.findFirst({
+        where: { codigo: tipoImovelTarget, ativo: true },
+      });
+      if (!tipo || tipo.finalidadeusocodigo !== finalidadeUsoTarget) {
+        throw new BadRequestException(
+          'tipoImovelCodigo deve pertencer ao finalidadeUsoCodigo informado (ou já associado ao interesse).',
+        );
       }
-      data.compraoualuguel = dto.compraOuAluguel as compraoualuguel;
-    }
-    if (dto.finalidadeId !== undefined) {
-      const rec = await this.prisma.finalidade.findFirst({ where: { id: dto.finalidadeId, ativo: true } });
-      if (!rec) throw new BadRequestException('finalidadeId inválido ou inativo. Use ID de GET /parametros/finalidade.');
-      data.finalidadeid = rec.id;
-    }
-    if (dto.tipoImovelId !== undefined) {
-      const rec = await this.prisma.tipoimovel.findFirst({ where: { id: dto.tipoImovelId, ativo: true } });
-      if (!rec) throw new BadRequestException('tipoImovelId inválido ou inativo. Use ID de GET /parametros/tipoimovel.');
-      data.tipoimovelid = rec.id;
-    }
-    if (dto.tipoCasaId !== undefined) {
-      const rec = await this.prisma.tipocasa.findFirst({ where: { id: dto.tipoCasaId, ativo: true } });
-      if (!rec) throw new BadRequestException('tipoCasaId inválido ou inativo. Use ID de GET /parametros/tipocasa.');
-      data.tipocasaid = rec.id;
-    }
-    if (dto.mobiliaId !== undefined) {
-      const rec = await this.prisma.mobilia.findFirst({ where: { id: dto.mobiliaId, ativo: true } });
-      if (!rec) throw new BadRequestException('mobiliaId inválido ou inativo. Use ID de GET /parametros/mobilia.');
-      data.mobiliaid = rec.id;
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.interesseimovel.update({ where: { id }, data });
+      if (Object.keys(data).length > 0) {
+        await tx.interesseimovel.update({ where: { id }, data });
+      }
 
       if (dto.localizacoes !== undefined) {
         await tx.localizacaointeresse.deleteMany({ where: { interesseimovelid: id } });
@@ -280,27 +257,13 @@ export class InterestsService {
           await tx.localizacaointeresse.createMany({
             data: dto.localizacoes.map((loc) => ({
               interesseimovelid: id,
-              cep: loc.cep ?? null,
-              municipiocodibge: loc.municipiocodibge ?? null,
-              bairro: loc.bairro ?? null,
+              cep: loc.cep?.trim() || null,
+              logradouro: loc.logradouro?.trim() || null,
+              bairro: loc.bairro?.trim() || null,
+              cidade: loc.cidade?.trim() || null,
+              uf: loc.uf?.trim().toUpperCase() || null,
+              codibgecidade: loc.codIbgeCidade?.trim() || null,
             })),
-          });
-        }
-      }
-
-      if (dto.featureIds !== undefined) {
-        await tx.interesseimovelfeature.deleteMany({ where: { interesseimovelid: id } });
-        if (dto.featureIds.length > 0) {
-          const features = await tx.feature.findMany({
-            where: { id: { in: dto.featureIds }, ativo: true },
-          });
-          if (features.length !== dto.featureIds.length) {
-            throw new BadRequestException(
-              'Um ou mais featureIds inválidos ou inativos. Use IDs de GET /parametros/feature.',
-            );
-          }
-          await tx.interesseimovelfeature.createMany({
-            data: dto.featureIds.map((featureid) => ({ interesseimovelid: id, featureid })),
           });
         }
       }
@@ -315,69 +278,62 @@ export class InterestsService {
   }
 
   async remove(id: string, clientid: string) {
-    const interest = await this.prisma.interesseimovel.findUnique({
-      where: { id },
-    });
+    const interest = await this.prisma.interesseimovel.findUnique({ where: { id } });
     if (!interest || interest.clientid !== clientid) {
       throw new NotFoundException('Interesse não encontrado');
     }
-    await this.prisma.interesseimovel.update({
-      where: { id },
-      data: { ativo: false },
-    });
+    await this.prisma.interesseimovel.delete({ where: { id } });
   }
 
-  private toPropertyInterest(
-    row: {
-      id: string;
-      clientid: string;
-      client: { nome: string; telefone: string; email: string };
-      compraoualuguel: compraoualuguel;
-      finalidade: { codigo: string; label?: string };
-      tipoimovel: { codigo: string; label?: string };
-      tipocasa: { codigo: string; label?: string };
-      mobilia: { codigo: string; label?: string };
-      localizacoes: Array<{ cep: string | null; municipiocodibge: string | null; bairro: string | null }>;
-      features: Array<{ feature: { codigo: string; label?: string } }>;
-      quartos: number | null;
-      suites: number | null;
-      metragemterreno: number | null;
-      areaconstruida: number | null;
-      minprice: number;
-      maxprice: number;
-      observacoes: string;
-      criadoem: Date;
-      ativo: boolean;
-    },
-  ) {
-    const label = (r: { codigo: string; label?: string }) => r?.label ?? r?.codigo ?? '';
-    const num = (n: number | null) => (n != null ? String(n) : '');
-    const localizacoesResposta = row.localizacoes.map((loc) => ({
+  async fecharLead(interesseId: string, clientid: string) {
+    const interest = await this.prisma.interesseimovel.findUnique({ where: { id: interesseId } });
+    if (!interest || interest.clientid !== clientid) {
+      throw new NotFoundException('Interesse não encontrado');
+    }
+    if (interest.status === STATUS_LEAD.CLOSED) {
+      return { interesseId, status: interest.status };
+    }
+    await this.prisma.interesseimovel.update({
+      where: { id: interesseId },
+      data: { status: STATUS_LEAD.CLOSED },
+    });
+    return { interesseId, status: STATUS_LEAD.CLOSED };
+  }
+
+  private toPropertyInterest(row: InterestRow) {
+    const locs = (row.localizacoes ?? []).map((loc) => ({
       cep: loc.cep ?? undefined,
-      municipiocodibge: loc.municipiocodibge ?? undefined,
+      logradouro: loc.logradouro ?? undefined,
       bairro: loc.bairro ?? undefined,
+      cidade: loc.cidade ?? undefined,
+      uf: loc.uf ?? undefined,
+      codIbgeCidade: loc.codibgecidade ?? undefined,
     }));
-    const featuresResposta = row.features.map((f) => f.feature.label ?? f.feature.codigo);
     return {
       id: row.id,
       clientId: row.clientid,
       clientName: row.client.nome,
       clientPhone: row.client.telefone,
       clientEmail: row.client.email,
-      localizacoes: localizacoesResposta,
-      compraOuAluguel: row.compraoualuguel,
-      finalidade: label(row.finalidade),
-      tipoImovel: label(row.tipoimovel),
-      tipoCasa: label(row.tipocasa),
-      quartos: num(row.quartos),
-      suites: num(row.suites),
-      metragemTerreno: num(row.metragemterreno),
-      areaConstruida: num(row.areaconstruida),
-      mobilia: label(row.mobilia),
-      minPrice: row.minprice,
-      maxPrice: row.maxprice,
-      features: featuresResposta,
+      localizacoes: locs,
+      finalidadeContratacaoCodigo: row.finalidadecontratacaocodigo,
+      finalidadeContratacao: row.finalidadecontratacao.nome,
+      finalidadeUsoCodigo: row.finalidadeusocodigo,
+      finalidadeUso: row.finalidadeuso.nome,
+      tipoImovelCodigo: row.tipoimovelcodigo,
+      tipoImovel: row.tipoimovel.nome,
+      mobiliaCodigo: row.mobiliacodigo,
+      mobilia: row.mobilia.nome,
+      urgenciaCodigo: row.urgenciacodigo,
+      urgencia: row.urgencia.nome,
+      aceitaFinanciamento: row.aceitafinanciamento,
+      quartos: row.quartos ?? [],
+      suites: row.suites ?? [],
+      metragem: row.metragem,
+      minPrice: decimalToNumber(row.minprice),
+      maxPrice: decimalToNumber(row.maxprice),
       observacoes: row.observacoes,
+      status: row.status,
       createdAt: row.criadoem.toISOString(),
       isActive: row.ativo,
     };

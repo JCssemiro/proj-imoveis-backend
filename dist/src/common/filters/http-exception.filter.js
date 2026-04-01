@@ -23,14 +23,11 @@ let HttpExceptionFilter = HttpExceptionFilter_1 = class HttpExceptionFilter {
         const message = exception instanceof common_1.HttpException
             ? exception.getResponse().message ?? exception.message
             : 'Internal server error';
-        const code = exception instanceof common_1.HttpException
-            ? exception.getResponse()?.code ?? 'ERROR'
-            : 'INTERNAL_ERROR';
         if (status >= 500 && process.env.NODE_ENV !== 'production') {
             this.logger.error(exception instanceof Error ? exception.stack : String(exception));
         }
         response.status(status).send({
-            code: typeof code === 'string' ? code : 'ERROR',
+            code: status,
             message: Array.isArray(message) ? message[0] : message,
         });
     }

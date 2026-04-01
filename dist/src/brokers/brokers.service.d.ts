@@ -14,6 +14,6 @@ export declare class BrokersService {
         avatar: string | null;
         specialties: string[];
         rating: number;
-        totalLeads: number;
+        totalConversas: number;
     }>>;
 }

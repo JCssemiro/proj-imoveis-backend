@@ -11,6 +11,6 @@ export declare class BrokersController {
         avatar: string | null;
         specialties: string[];
         rating: number;
-        totalLeads: number;
+        totalConversas: number;
     }>>;
 }

@@ -17,6 +17,7 @@ export declare class ConversationsService {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;
@@ -45,6 +46,7 @@ export declare class ConversationsService {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;
@@ -73,6 +75,7 @@ export declare class ConversationsService {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;
@@ -101,6 +104,7 @@ export declare class ConversationsService {
         brokerName: string;
         brokerAvatar: string | null;
         leadId: string;
+        interesseImovelId: string;
         propertyInterest: string;
         messages: {
             id: string;

@@ -16,18 +16,18 @@ class CreateConversationDto {
 }
 exports.CreateConversationDto = CreateConversationDto;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
-    (0, class_validator_1.IsUUID)(),
+    (0, swagger_1.ApiProperty)({ description: 'UUID do interesse (lead) — mesmo id retornado em GET /interesse e /prospecto' }),
+    (0, class_validator_1.IsUUID)('4'),
     __metadata("design:type", String)
-], CreateConversationDto.prototype, "leadId", void 0);
+], CreateConversationDto.prototype, "interesseImovelId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)(),
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsUUID)('4'),
     __metadata("design:type", String)
 ], CreateConversationDto.prototype, "clientId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)(),
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsUUID)('4'),
     __metadata("design:type", String)
 ], CreateConversationDto.prototype, "brokerId", void 0);
 //# sourceMappingURL=create-conversation.dto.js.map

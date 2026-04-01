@@ -13,6 +13,7 @@ export declare class UsersController {
         avatar: string | null;
         creci: string | null;
         subscriptionActive: boolean | null;
+        plan: import("./users.service").UserPlanPayload;
     }>;
     updateMe(userId: string, dto: UpdateProfileDto): Promise<{
         id: string;
@@ -23,6 +24,7 @@ export declare class UsersController {
         avatar: string | null;
         creci: string | null;
         subscriptionActive: boolean | null;
+        plan: import("./users.service").UserPlanPayload;
     }>;
     changeBrokerPlan(brokerId: string, dto: ChangeBrokerPlanDto): Promise<{
         id: string;
@@ -33,5 +35,6 @@ export declare class UsersController {
         avatar: string | null;
         creci: string | null;
         subscriptionActive: boolean | null;
+        plan: import("./users.service").UserPlanPayload;
     }>;
 }

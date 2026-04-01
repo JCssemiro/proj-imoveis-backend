@@ -27,10 +27,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? (exception.getResponse() as { message?: string | string[] }).message ?? exception.message
         : 'Internal server error';
 
-    const code = exception instanceof HttpException
-      ? (exception.getResponse() as { code?: string })?.code ?? 'ERROR'
-      : 'INTERNAL_ERROR';
-
     if (status >= 500 && process.env.NODE_ENV !== 'production') {
       this.logger.error(
         exception instanceof Error ? exception.stack : String(exception),
@@ -38,7 +34,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     response.status(status).send({
-      code: typeof code === 'string' ? code : 'ERROR',
+      code: status,
       message: Array.isArray(message) ? message[0] : message,
     });
   }

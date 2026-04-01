@@ -27,19 +27,42 @@ __decorate([
     __metadata("design:type", String)
 ], LocalizacaoInteresseDto.prototype, "cep", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Código IBGE do município (até 7 dígitos)' }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Logradouro' }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateIf)((_, v) => v != null && v !== ''),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(7),
-    (0, class_validator_1.Matches)(/^\d{1,7}$/, { message: 'Código IBGE deve conter apenas dígitos' }),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
-], LocalizacaoInteresseDto.prototype, "municipiocodibge", void 0);
+], LocalizacaoInteresseDto.prototype, "logradouro", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Bairro' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(200),
+    (0, class_validator_1.MaxLength)(120),
     __metadata("design:type", String)
 ], LocalizacaoInteresseDto.prototype, "bairro", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Cidade' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(120),
+    __metadata("design:type", String)
+], LocalizacaoInteresseDto.prototype, "cidade", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'UF (2 letras)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateIf)((_, v) => v != null && v !== ''),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(2),
+    (0, class_validator_1.Matches)(/^[A-Za-z]{2}$/, { message: 'UF deve ter 2 letras' }),
+    __metadata("design:type", String)
+], LocalizacaoInteresseDto.prototype, "uf", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Código IBGE da cidade (até 7 dígitos)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateIf)((_, v) => v != null && v !== ''),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(10),
+    (0, class_validator_1.Matches)(/^\d{1,10}$/, { message: 'Código IBGE deve conter apenas dígitos' }),
+    __metadata("design:type", String)
+], LocalizacaoInteresseDto.prototype, "codIbgeCidade", void 0);
 //# sourceMappingURL=localizacao-interesse.dto.js.map

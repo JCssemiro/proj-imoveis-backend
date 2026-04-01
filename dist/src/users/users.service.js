@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const decimal_1 = require("../common/utils/decimal");
 let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -19,6 +20,7 @@ let UsersService = class UsersService {
     async getMe(userId) {
         const user = await this.prisma.usuario.findUnique({
             where: { id: userId },
+            include: { plano: true },
         });
         if (!user)
             throw new common_1.NotFoundException('Usuário não encontrado');
@@ -52,29 +54,40 @@ let UsersService = class UsersService {
                 ...(dto.phone !== undefined && { telefone: dto.phone }),
                 ...(dto.creci !== undefined && user.tipo === 'broker' && { creci: dto.creci }),
             },
+            include: { plano: true },
         });
         return this.toUserResponse(updated);
     }
-    async changeBrokerPlan(brokerId, planoId) {
+    async changeBrokerPlan(brokerId, planoCodigo) {
         const user = await this.prisma.usuario.findUnique({ where: { id: brokerId } });
         if (!user)
             throw new common_1.NotFoundException('Usuário não encontrado');
         if (user.tipo !== 'broker')
             throw new common_1.ForbiddenException('Apenas corretores podem alterar o plano');
         const plan = await this.prisma.plano.findFirst({
-            where: { id: planoId, ativo: true },
+            where: { codigo: planoCodigo, ativo: true },
         });
         if (!plan) {
-            throw new common_1.BadRequestException('planoId inválido ou inativo. Use um ID retornado por GET /parametros/plano.');
+            throw new common_1.BadRequestException('planoCodigo inválido ou inativo. Use um código retornado por GET /parametros/plano.');
         }
         const updated = await this.prisma.usuario.update({
             where: { id: brokerId },
             data: {
-                planoid: planoId,
+                planocodigo: planoCodigo,
                 ativoassinatura: true,
             },
+            include: { plano: true },
         });
         return this.toUserResponse(updated);
+    }
+    planFromRow(p) {
+        if (!p)
+            return null;
+        return {
+            codigo: p.codigo,
+            nome: p.nome,
+            precoMensal: (0, decimal_1.decimalToNumber)(p.precomensal),
+        };
     }
     toUserResponse(user) {
         return {
@@ -86,6 +99,7 @@ let UsersService = class UsersService {
             avatar: user.avatar,
             creci: user.creci,
             subscriptionActive: user.ativoassinatura,
+            plan: this.planFromRow(user.plano),
         };
     }
 };

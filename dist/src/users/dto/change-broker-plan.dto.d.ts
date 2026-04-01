@@ -1,3 +1,3 @@
 export declare class ChangeBrokerPlanDto {
-    planoId: string;
+    planoCodigo: number;
 }

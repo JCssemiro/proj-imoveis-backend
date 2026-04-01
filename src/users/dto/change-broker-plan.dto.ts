@@ -1,9 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, Min } from 'class-validator';
 
 export class ChangeBrokerPlanDto {
-  @ApiProperty({ description: 'UUID do plano (GET /api/v1/parametros/plano)', example: 'uuid' })
-  @IsUUID('4')
-  planoId: string;
+  @ApiProperty({
+    description: 'Código do plano retornado por GET /parametros/plano',
+    example: 2,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  planoCodigo: number;
 }
-

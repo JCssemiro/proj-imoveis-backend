@@ -1,273 +1,192 @@
--- =============================================================================
--- ImobiConnect - Schema padronizado: PT lowercase, enum compraoualuguel,
--- feature/localizacao parametrizados, plano corretores
--- =============================================================================
+-- ImobiConnect — UUID nas entidades; parâmetros com codigo int; status lead smallint ordenado; monetário NUMERIC; textos com VARCHAR limitado
 
--- Enums
+create extension if not exists pgcrypto;
+
 create type tipousuario as enum ('client', 'broker');
-create type statuslead as enum ('new', 'contacted', 'in_progress', 'closed');
 create type tiporemetente as enum ('client', 'broker');
-create type compraoualuguel as enum ('compra', 'aluguel');
 
--- =============================================================================
--- Tabelas de parâmetros (cadastro sem alterar schema)
--- =============================================================================
+create table finalidadeuso (
+  codigo integer primary key,
+  nome varchar(120) not null,
+  ativo boolean not null default true
+);
 
-create table finalidade (
-  id text not null,
-  codigo text not null,
-  label text not null,
-  ativo boolean not null default true,
-  ordem integer not null default 0,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint finalidadepkey primary key (id)
+create table finalidadecontratacao (
+  codigo integer primary key,
+  nome varchar(120) not null,
+  ativo boolean not null default true
 );
 
 create table tipoimovel (
-  id text not null,
-  codigo text not null,
-  label text not null,
-  ativo boolean not null default true,
-  ordem integer not null default 0,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint tipoimovelpkey primary key (id)
+  codigo integer primary key,
+  nome varchar(120) not null,
+  finalidadeusocodigo integer not null references finalidadeuso(codigo) on delete restrict on update cascade,
+  ativo boolean not null default true
 );
 
-create table tipocasa (
-  id text not null,
-  codigo text not null,
-  label text not null,
-  ativo boolean not null default true,
-  ordem integer not null default 0,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint tipocasapkey primary key (id)
-);
+create index tipoimovelfinalidadeusocodigo_idx on tipoimovel(finalidadeusocodigo);
+create index tipoimovelativo_idx on tipoimovel(ativo);
 
 create table mobilia (
-  id text not null,
-  codigo text not null,
-  label text not null,
-  ativo boolean not null default true,
-  ordem integer not null default 0,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint mobiliapkey primary key (id)
+  codigo integer primary key,
+  nome varchar(120) not null,
+  ativo boolean not null default true
 );
 
--- Features pré-cadastradas (características de imóvel)
-create table feature (
-  id text not null,
-  codigo text not null,
-  label text not null,
-  ativo boolean not null default true,
-  ordem integer not null default 0,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint featurepkey primary key (id)
+create table urgencia (
+  codigo integer primary key,
+  nome varchar(120) not null,
+  ativo boolean not null default true
 );
 
--- Planos dos corretores
+create index finalidadeuso_ativo_idx on finalidadeuso(ativo);
+create index finalidadecontratacao_ativo_idx on finalidadecontratacao(ativo);
+create index mobilia_ativo_idx on mobilia(ativo);
+create index urgencia_ativo_idx on urgencia(ativo);
+
 create table plano (
-  id text not null,
-  codigo text not null,
-  label text not null,
-  ativo boolean not null default true,
-  ordem integer not null default 0,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint planopkey primary key (id)
+  codigo integer primary key,
+  nome varchar(120) not null,
+  precomensal numeric(14, 2) not null default 0,
+  ativo boolean not null default true
 );
 
-create unique index finalidadecodigokey on finalidade(codigo);
-create unique index tipoimovelcodigokey on tipoimovel(codigo);
-create unique index tipocasacodigokey on tipocasa(codigo);
-create unique index mobiliacodigokey on mobilia(codigo);
-create unique index featurecodigokey on feature(codigo);
-create unique index planocodigokey on plano(codigo);
-
-create index finalidadeativoordemidx on finalidade(ativo, ordem);
-create index tipoimovelativoordemidx on tipoimovel(ativo, ordem);
-create index tipocasaativoordemidx on tipocasa(ativo, ordem);
-create index mobiliaativoordemidx on mobilia(ativo, ordem);
-create index featureativoordemidx on feature(ativo, ordem);
-create index planoativoordemidx on plano(ativo, ordem);
-
--- =============================================================================
--- usuario
--- =============================================================================
+create index plano_ativo_idx on plano(ativo);
 
 create table usuario (
-  id text not null,
-  nome text not null,
-  email text not null,
-  telefone text not null,
-  senhahash text not null,
+  id uuid not null primary key default gen_random_uuid(),
+  nome varchar(200) not null,
+  email varchar(320) not null,
+  telefone varchar(30) not null,
+  senhahash varchar(255) not null,
   tipo tipousuario not null,
-  cpf text,
-  creci text,
-  planoid text,
+  creci varchar(30),
+  planocodigo integer references plano(codigo) on delete set null on update cascade,
   ativoassinatura boolean,
-  avatar text,
-  tokenresetarsenha text,
+  avatar varchar(2048),
+  tokenresetarsenha varchar(128),
   expiraresetarsenha timestamp(3),
   criadoem timestamp(3) not null default current_timestamp,
-  atualizadoem timestamp(3) not null default current_timestamp,
-  constraint usuariopkey primary key (id)
+  atualizadoem timestamp(3) not null default current_timestamp
 );
 
 create unique index usuarioemailkey on usuario(email);
+create unique index usuario_creci_key on usuario(creci) where creci is not null;
 create index usuariotipoidx on usuario(tipo);
-create index usuarioplanoididx on usuario(planoid);
-
--- =============================================================================
--- interesseimovel
--- =============================================================================
+create index usuarioplanocodigo_idx on usuario(planocodigo);
 
 create table interesseimovel (
-  id text not null,
-  clientid text not null,
-  compraoualuguel compraoualuguel not null,
-  finalidadeid text not null,
-  tipoimovelid text not null,
-  tipocasaid text not null,
-  mobiliaid text not null,
-  quartos integer,
-  suites integer,
-  metragemterreno integer,
-  areaconstruida integer,
-  minprice integer not null default 0,
-  maxprice integer not null default 0,
-  observacoes text not null default '',
+  id uuid not null primary key default gen_random_uuid(),
+  clientid uuid not null references usuario(id) on delete cascade on update cascade,
+  finalidadecontratacaocodigo integer not null references finalidadecontratacao(codigo) on delete restrict on update cascade,
+  finalidadeusocodigo integer not null references finalidadeuso(codigo) on delete restrict on update cascade,
+  tipoimovelcodigo integer not null references tipoimovel(codigo) on delete restrict on update cascade,
+  mobiliacodigo integer not null references mobilia(codigo) on delete restrict on update cascade,
+  urgenciacodigo integer not null references urgencia(codigo) on delete restrict on update cascade,
+  aceitafinanciamento boolean not null default false,
+  quartos integer[] not null default '{}',
+  suites integer[] not null default '{}',
+  metragem integer,
+  minprice numeric(14, 2) not null default 0,
+  maxprice numeric(14, 2) not null default 0,
+  observacoes varchar(5000) not null default '',
+  status smallint not null default 1,
   ativo boolean not null default true,
   criadoem timestamp(3) not null default current_timestamp,
-  constraint interesseimovelpkey primary key (id),
-  constraint interesseimovelobservacoeslength check (length(observacoes) <= 5000),
-  constraint interesseimovelminpricenonnegative check (minprice >= 0),
-  constraint interesseimovelmaxpricenonnegative check (maxprice >= 0),
   constraint interesseimovelpricerange check (minprice <= maxprice),
-  constraint interesseimovelquartosnonnegative check (quartos is null or quartos >= 0),
-  constraint interesseimovelsuitesnonnegative check (suites is null or suites >= 0),
-  constraint interesseimovelmetragemnonnegative check (metragemterreno is null or metragemterreno >= 0),
-  constraint interesseimovelareanonnegative check (areaconstruida is null or areaconstruida >= 0)
+  constraint interesseimovelmetragemnonnegative check (metragem is null or metragem >= 0),
+  constraint interesseimovelstatusrange check (status >= 1 and status <= 4)
 );
 
 create index interesseimovelclientididx on interesseimovel(clientid);
 create index interesseimovelcriadoemidx on interesseimovel(criadoem);
 create index interesseimovelativoidx on interesseimovel(ativo);
 create index interesseimovelclientidativoidx on interesseimovel(clientid, ativo);
-create index interesseimovelclientidativocriadoemidx on interesseimovel(clientid, ativo, criadoem desc nulls last);
-create index interesseimovelfinalidadeidtipoimovelididx on interesseimovel(finalidadeid, tipoimovelid);
-create index interesseimovelminpricemaxpriceidx on interesseimovel(minprice, maxprice);
-create index interesseimovelcompraoualuguelidx on interesseimovel(compraoualuguel);
-
--- =============================================================================
--- localizacaointeresse (CEP, municipio cod IBGE, bairro - todos opcionais)
--- =============================================================================
+create index interesseimoveltipoimovelcodigo_idx on interesseimovel(tipoimovelcodigo);
+create index interesseimovelminmaxpriceidx on interesseimovel(minprice, maxprice);
+create index interesseimovelfinalidadecontratacaocodigo_idx on interesseimovel(finalidadecontratacaocodigo);
+create index interesseimovelfinalidadeusocodigo_idx on interesseimovel(finalidadeusocodigo);
+create index interesseimovelstatusidx on interesseimovel(status);
 
 create table localizacaointeresse (
-  id text not null default gen_random_uuid()::text,
-  interesseimovelid text not null,
-  cep text,
-  municipiocodibge text,
-  bairro text,
-  constraint localizacaointeressepkey primary key (id)
+  id uuid not null primary key default gen_random_uuid(),
+  interesseimovelid uuid not null references interesseimovel(id) on delete cascade on update cascade,
+  cep varchar(12),
+  logradouro varchar(255),
+  bairro varchar(120),
+  cidade varchar(120),
+  uf char(2),
+  codibgecidade varchar(10)
 );
 
 create index localizacaointeresseinteresseimovelididx on localizacaointeresse(interesseimovelid);
-create index localizacaointeressecepidx on localizacaointeresse(cep) where cep is not null;
-create index localizacaointeressemunicipiocodibgeidx on localizacaointeresse(municipiocodibge) where municipiocodibge is not null;
-
--- =============================================================================
--- interesseimovelfeature (N:N interesse <-> feature)
--- =============================================================================
-
-create table interesseimovelfeature (
-  interesseimovelid text not null,
-  featureid text not null,
-  constraint interesseimovelfeaturepkey primary key (interesseimovelid, featureid)
-);
-
-create index interesseimovelfeatureinteresseimovelididx on interesseimovelfeature(interesseimovelid);
-create index interesseimovelfeaturefeatureididx on interesseimovelfeature(featureid);
-
--- =============================================================================
--- prospecto (lead)
--- =============================================================================
-
-create table prospecto (
-  id text not null,
-  interesseimovelid text not null,
-  corretorid text,
-  status statuslead not null default 'new',
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint prospectopkey primary key (id)
-);
-
-create unique index prospectointeresseimovelidkey on prospecto(interesseimovelid);
-create index prospectocorretorididx on prospecto(corretorid);
-create index prospectostatusidx on prospecto(status);
-create index prospectocriadoemidx on prospecto(criadoem);
-create index prospectocorretoridstatusidx on prospecto(corretorid, status);
-create index prospectostatusnewidx on prospecto(status) where status = 'new';
-
--- =============================================================================
--- conversa
--- =============================================================================
+create index localizacaointeressecepidx on localizacaointeresse(cep);
+create index localizacaointeressecodibgeidx on localizacaointeresse(codibgecidade);
 
 create table conversa (
-  id text not null,
-  clientid text not null,
-  corretorid text not null,
-  leadid text not null,
-  resumointeresse text not null,
-  atualizadoem timestamp(3) not null default current_timestamp,
-  constraint conversapkey primary key (id)
+  id uuid not null primary key default gen_random_uuid(),
+  clientid uuid not null references usuario(id) on delete cascade on update cascade,
+  corretorid uuid not null references usuario(id) on delete cascade on update cascade,
+  interesseimovelid uuid not null references interesseimovel(id) on delete cascade on update cascade,
+  resumointeresse varchar(512) not null,
+  ativo boolean not null default true,
+  atualizadoem timestamp(3) not null default current_timestamp
 );
 
-create unique index conversaleadidkey on conversa(leadid);
 create index conversaclientididx on conversa(clientid);
 create index conversacorretorididx on conversa(corretorid);
+create index conversa_interesseimovelid_ativo_idx on conversa(interesseimovelid, ativo);
+create index conversa_corretorid_ativo_idx on conversa(corretorid, ativo);
 create index conversaatualizadoemidx on conversa(atualizadoem);
 
--- =============================================================================
--- mensagem
--- =============================================================================
-
 create table mensagem (
-  id text not null,
-  conversaid text not null,
-  remetenteid text not null,
+  id uuid not null primary key default gen_random_uuid(),
+  conversaid uuid not null references conversa(id) on delete cascade on update cascade,
+  remetenteid uuid not null references usuario(id) on delete cascade on update cascade,
   tiporemetente tiporemetente not null,
-  conteudo text not null,
-  urlimagem text,
-  criadoem timestamp(3) not null default current_timestamp,
-  constraint mensagempkey primary key (id)
+  conteudo varchar(4000) not null,
+  urlimagem varchar(2048),
+  criadoem timestamp(3) not null default current_timestamp
 );
 
 create index mensagemconversaididx on mensagem(conversaid);
 create index mensagemcriadoemidx on mensagem(criadoem);
 create index mensagemconversaidcriadoemidx on mensagem(conversaid, criadoem);
 
--- =============================================================================
--- Foreign keys
--- =============================================================================
+-- Seed (precomensal em reais com 2 decimais)
+insert into finalidadeuso (codigo, nome) values
+  (1, 'Residencial'),
+  (2, 'Comercial');
 
-alter table usuario add constraint usuarioplanoidfkey foreign key (planoid) references plano(id) on delete set null on update cascade;
+insert into finalidadecontratacao (codigo, nome) values
+  (1, 'Compra'),
+  (2, 'Aluguel');
 
-alter table interesseimovel add constraint interesseimovelclientidfkey foreign key (clientid) references usuario(id) on delete cascade on update cascade;
-alter table interesseimovel add constraint interesseimovelfinalidadeidfkey foreign key (finalidadeid) references finalidade(id) on delete restrict on update cascade;
-alter table interesseimovel add constraint interesseimoveltipoimovelidfkey foreign key (tipoimovelid) references tipoimovel(id) on delete restrict on update cascade;
-alter table interesseimovel add constraint interesseimoveltipocasaidfkey foreign key (tipocasaid) references tipocasa(id) on delete restrict on update cascade;
-alter table interesseimovel add constraint interesseimovelmobiliaidfkey foreign key (mobiliaid) references mobilia(id) on delete restrict on update cascade;
+insert into tipoimovel (codigo, nome, finalidadeusocodigo) values
+  (1, 'Apartamento', 1),
+  (2, 'Casa em Condomínio', 1),
+  (3, 'Casa em Via Pública', 1),
+  (4, 'Sobrado', 1),
+  (5, 'Terreno em Condomínio', 1),
+  (6, 'Terreno em Via Pública', 1),
+  (7, 'Galpão', 2),
+  (8, 'Terreno em Via Pública', 2),
+  (9, 'Terreno em Condomínio', 2),
+  (10, 'Outro', 2);
 
-alter table localizacaointeresse add constraint localizacaointeresseinteresseimovelidfkey foreign key (interesseimovelid) references interesseimovel(id) on delete cascade on update cascade;
+insert into mobilia (codigo, nome) values
+  (1, '100% Mobiliado'),
+  (2, 'Somente Planejados'),
+  (3, 'Sem Mobília');
 
-alter table interesseimovelfeature add constraint interesseimovelfeatureinteresseimovelidfkey foreign key (interesseimovelid) references interesseimovel(id) on delete cascade on update cascade;
-alter table interesseimovelfeature add constraint interesseimovelfeaturefeatureidfkey foreign key (featureid) references feature(id) on delete restrict on update cascade;
+insert into urgencia (codigo, nome) values
+  (1, 'Imediato'),
+  (2, 'Até 3 meses'),
+  (3, 'Até 6 meses'),
+  (4, 'Até 1 ano'),
+  (5, 'Só pesquisando');
 
-alter table prospecto add constraint prospectointeresseimovelidfkey foreign key (interesseimovelid) references interesseimovel(id) on delete cascade on update cascade;
-alter table prospecto add constraint prospectocorretoridfkey foreign key (corretorid) references usuario(id) on delete set null on update cascade;
-
-alter table conversa add constraint conversaclientidfkey foreign key (clientid) references usuario(id) on delete cascade on update cascade;
-alter table conversa add constraint conversacorretoridfkey foreign key (corretorid) references usuario(id) on delete cascade on update cascade;
-alter table conversa add constraint conversaleadidfkey foreign key (leadid) references prospecto(id) on delete cascade on update cascade;
-
-alter table mensagem add constraint mensagemconversaidfkey foreign key (conversaid) references conversa(id) on delete cascade on update cascade;
-alter table mensagem add constraint mensagemremetenteidfkey foreign key (remetenteid) references usuario(id) on delete cascade on update cascade;
+insert into plano (codigo, nome, precomensal) values
+  (1, 'Básico', 99.00),
+  (2, 'Profissional', 299.00),
+  (3, 'Premium', 599.00);
